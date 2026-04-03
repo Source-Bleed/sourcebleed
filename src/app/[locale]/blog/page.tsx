@@ -1,9 +1,15 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getBlogDictionary } from "@/i18n/get-blog-dictionary";
 import { hasLocale, type Locale } from "@/lib/i18n/config";
 import { withLocale } from "@/lib/i18n/paths";
+import {
+  featuredEsimBleed,
+  listingArticleFigures,
+  wideSmartCity,
+} from "@/lib/reaper-labs-unsplash";
 
 export async function generateMetadata({
   params,
@@ -35,15 +41,30 @@ export default async function BlogPage({
   const esimReport = withLocale(locale, "/blog/esim-bleed");
 
   return (
-    <div className="pt-8 pb-12 px-6 md:px-12 max-w-7xl">
+    <div className="w-full max-w-[min(100%,110rem)] mx-auto pt-8 pb-12 px-6 md:px-10 lg:px-12">
       <section className="mb-16 grid grid-cols-1 lg:grid-cols-12 gap-0 border border-outline-variant/20 bg-surface-container-lowest">
         <div className="lg:col-span-8 relative h-[400px] md:h-[550px] overflow-hidden group">
-          <div className="w-full h-full bg-surface-container flex items-center justify-center">
-            <span className="material-symbols-outlined text-red-900/20 text-[200px]">
-              bug_report
-            </span>
+          <Image
+            src={featuredEsimBleed.src}
+            alt={featuredEsimBleed.alt}
+            fill
+            className="object-cover object-center scale-105 group-hover:scale-100 transition-transform duration-700"
+            sizes="(max-width: 1024px) 100vw, 66vw"
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
+          <div className="absolute bottom-3 right-3 text-[8px] font-[family-name:var(--font-headline)] text-white/50 tracking-widest uppercase max-w-[min(100%,280px)] text-right leading-tight">
+            Photo:{" "}
+            <a
+              href={featuredEsimBleed.photoPage}
+              target="_blank"
+              rel="noreferrer"
+              className="underline underline-offset-2 hover:text-white/80"
+            >
+              {featuredEsimBleed.photographer}
+            </a>{" "}
+            / Unsplash
           </div>
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
           <div className="absolute top-6 left-6">
             <span className="bg-error-container text-on-error-container px-3 py-1 font-[family-name:var(--font-headline)] text-[10px] font-black tracking-widest uppercase">
               {dict.featured.badge}
@@ -95,15 +116,27 @@ export default async function BlogPage({
       </section>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {dict.articles.map((article) => (
+        {dict.articles.map((article, idx) => (
           <article
             key={article.title}
             className="bg-surface-container-low p-6 border-b-2 border-transparent hover:border-red-600 transition-all group"
           >
-            <div className="h-48 w-full bg-surface-container mb-6 overflow-hidden flex items-center justify-center">
-              <span className="material-symbols-outlined text-red-900/10 text-[80px] group-hover:scale-110 transition-transform duration-500">
-                security
-              </span>
+            <div className="relative h-48 w-full bg-surface-container mb-6 overflow-hidden">
+              {listingArticleFigures[idx] ? (
+                <Image
+                  src={listingArticleFigures[idx].src}
+                  alt={listingArticleFigures[idx].alt}
+                  fill
+                  className="object-cover group-hover:scale-105 transition-transform duration-500"
+                  sizes="(max-width: 768px) 100vw, 33vw"
+                />
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-red-900/10 text-[80px]">
+                    security
+                  </span>
+                </div>
+              )}
             </div>
             <div className="flex justify-between items-start mb-4">
               <span className="text-[10px] font-[family-name:var(--font-headline)] text-on-surface-variant tracking-widest uppercase">
@@ -137,10 +170,14 @@ export default async function BlogPage({
 
         <article className="bg-surface-container-low p-6 border-b-2 border-transparent hover:border-red-600 transition-all group lg:col-span-2">
           <div className="flex flex-col md:flex-row gap-8">
-            <div className="h-64 md:h-auto md:w-1/2 bg-surface-container overflow-hidden flex items-center justify-center">
-              <span className="material-symbols-outlined text-red-900/10 text-[100px] group-hover:scale-110 transition-transform duration-500">
-                public
-              </span>
+            <div className="relative h-64 md:h-auto md:min-h-[280px] md:w-1/2 bg-surface-container overflow-hidden">
+              <Image
+                src={wideSmartCity.src}
+                alt={wideSmartCity.alt}
+                fill
+                className="object-cover group-hover:scale-105 transition-transform duration-500"
+                sizes="(max-width: 768px) 100vw, 50vw"
+              />
             </div>
             <div className="md:w-1/2 flex flex-col justify-center">
               <div className="flex justify-between items-start mb-4">
