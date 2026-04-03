@@ -12,10 +12,10 @@ export function Footer() {
     <footer className="w-full bg-surface-container-lowest border-t border-red-950 py-12 px-8 flex flex-col md:flex-row justify-between items-center gap-8 lg:ml-64 lg:w-[calc(100%-16rem)]">
       <div className="flex flex-col gap-2 items-center md:items-start">
         <span className="text-red-800 font-black font-[family-name:var(--font-headline)] uppercase tracking-tighter text-xl">
-          SOURCE BLEED PROTOCOL
+          SOURCE BLEED
         </span>
         <p className="font-[family-name:var(--font-body)] text-[10px] tracking-widest uppercase text-gray-700">
-          &copy; 2024 SOURCE BLEED PROTOCOL. UNHESITATING PRECISION.
+          &copy; 2026 SOURCE BLEED. UNHESITATING PRECISION.
         </p>
       </div>
       <div className="flex flex-wrap justify-center gap-8">
