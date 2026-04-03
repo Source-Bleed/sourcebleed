@@ -1,0 +1,1689 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>eSIM_BLEED: 오픈소스 eSIM 스택에서 발견된 93개 취약점 | SOURCE BLEED</title>
+<meta name="description" content="lpac과 OpenEUICC — 가장 널리 사용되는 오픈소스 eSIM 도구를 감사한 결과, CVSS 9.8 원격 킬 체인을 포함한 93개의 취약점을 발견했습니다. 가입자 인증 정보가 노출됩니다.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&family=Space+Grotesk:wght@400;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+<style>
+/* ── CSS Custom Properties (from globals.css theme) ── */
+:root {
+  --color-surface: #131313;
+  --color-surface-dim: #131313;
+  --color-surface-bright: #393939;
+  --color-surface-container-lowest: #0e0e0e;
+  --color-surface-container-low: #1b1b1b;
+  --color-surface-container: #1f1f1f;
+  --color-surface-container-high: #2a2a2a;
+  --color-surface-container-highest: #353535;
+  --color-surface-variant: #353535;
+
+  --color-on-surface: #e2e2e2;
+  --color-on-surface-variant: #ebbbb4;
+  --color-on-background: #e2e2e2;
+  --color-background: #131313;
+
+  --color-primary: #ffb4a8;
+  --color-primary-container: #ff5540;
+  --color-primary-fixed: #ffdad4;
+  --color-primary-fixed-dim: #ffb4a8;
+  --color-on-primary: #690100;
+  --color-on-primary-container: #5c0000;
+  --color-on-primary-fixed: #410000;
+  --color-on-primary-fixed-variant: #930100;
+  --color-inverse-primary: #c00100;
+
+  --color-secondary: #ffb4a8;
+  --color-secondary-container: #970100;
+  --color-secondary-fixed: #ffdad4;
+  --color-secondary-fixed-dim: #ffb4a8;
+  --color-on-secondary: #690100;
+  --color-on-secondary-container: #ff9f90;
+  --color-on-secondary-fixed: #410000;
+  --color-on-secondary-fixed-variant: #930100;
+
+  --color-tertiary: #acc7ff;
+  --color-tertiary-container: #488fff;
+  --color-tertiary-fixed: #d7e2ff;
+  --color-tertiary-fixed-dim: #acc7ff;
+  --color-on-tertiary: #002f67;
+  --color-on-tertiary-container: #00285b;
+  --color-on-tertiary-fixed: #001a40;
+  --color-on-tertiary-fixed-variant: #004491;
+
+  --color-error: #ffb4ab;
+  --color-error-container: #93000a;
+  --color-on-error: #690005;
+  --color-on-error-container: #ffdad6;
+
+  --color-outline: #b18780;
+  --color-outline-variant: #603e39;
+
+  --color-surface-tint: #ffb4a8;
+  --color-inverse-surface: #e2e2e2;
+  --color-inverse-on-surface: #303030;
+
+  --font-headline: "Space Grotesk", sans-serif;
+  --font-body: "Inter", sans-serif;
+  --font-label: "Space Grotesk", sans-serif;
+}
+
+/* ── Reset & Base ── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  border-radius: 0 !important;
+}
+
+body {
+  background-color: var(--color-surface);
+  color: var(--color-on-surface);
+  font-family: var(--font-body);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background-color: var(--color-primary-container);
+  color: white;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: #0e0e0e; }
+::-webkit-scrollbar-thumb { background: #603e39; }
+::-webkit-scrollbar-thumb:hover { background: #ff5540; }
+
+/* Material Symbols */
+.material-symbols-outlined {
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+  vertical-align: middle;
+}
+
+/* ── Layout ── */
+article {
+  max-width: 56rem;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 6rem;
+}
+
+@media (min-width: 768px) {
+  article {
+    padding-left: 3rem;
+    padding-right: 3rem;
+  }
+}
+
+/* ── Utility Classes ── */
+.font-headline {
+  font-family: var(--font-headline);
+}
+
+.text-primary {
+  color: var(--color-primary);
+}
+
+.text-primary-container {
+  color: var(--color-primary-container);
+}
+
+.text-on-surface {
+  color: var(--color-on-surface);
+}
+
+.text-on-surface-variant {
+  color: var(--color-on-surface-variant);
+}
+
+.tracking-widest {
+  letter-spacing: 0.1em;
+}
+
+.tracking-tighter {
+  letter-spacing: -0.05em;
+}
+
+.tracking-tight {
+  letter-spacing: -0.025em;
+}
+
+.uppercase {
+  text-transform: uppercase;
+}
+
+/* ── Header ── */
+header {
+  margin-bottom: 4rem;
+}
+
+.header-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.badge-critical {
+  background-color: var(--color-error-container);
+  color: var(--color-on-error-container);
+  padding: 0.25rem 0.75rem;
+  font-size: 10px;
+  font-family: var(--font-headline);
+  font-weight: 900;
+  letter-spacing: 0.1em;
+}
+
+.header-label {
+  font-size: 10px;
+  font-family: var(--font-headline);
+  color: var(--color-on-surface-variant);
+  letter-spacing: 0.1em;
+}
+
+.header-divider {
+  width: 2rem;
+  height: 1px;
+  background-color: var(--color-outline-variant);
+}
+
+h1 {
+  font-family: var(--font-headline);
+  font-size: 3rem;
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  line-height: 1;
+  text-transform: uppercase;
+  margin-bottom: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  h1 {
+    font-size: 4.5rem;
+  }
+}
+
+.header-desc {
+  color: var(--color-on-surface-variant);
+  font-size: 1.25rem;
+  font-weight: 300;
+  line-height: 1.625;
+  border-left: 2px solid rgba(220, 38, 38, 0.3);
+  padding-left: 1.5rem;
+  margin-bottom: 2rem;
+  max-width: 42rem;
+}
+
+.header-author-bar {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(96, 62, 57, 0.2);
+}
+
+.author-icon {
+  height: 2.5rem;
+  width: 2.5rem;
+  background-color: var(--color-surface-variant);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(127, 29, 29, 0.3);
+}
+
+.author-icon .material-symbols-outlined {
+  color: #dc2626;
+  font-size: 1.125rem;
+}
+
+.author-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.author-name {
+  font-size: 0.75rem;
+  font-family: var(--font-headline);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.author-role {
+  font-size: 10px;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-family: var(--font-headline);
+}
+
+.header-stats {
+  margin-left: auto;
+  display: flex;
+  gap: 1.5rem;
+}
+
+.stat-item {
+  text-align: center;
+}
+
+.stat-value {
+  display: block;
+  font-size: 1.5rem;
+  font-family: var(--font-headline);
+  font-weight: 900;
+  color: var(--color-primary);
+}
+
+.stat-label {
+  font-size: 8px;
+  color: #6b7280;
+  font-family: var(--font-headline);
+  letter-spacing: 0.1em;
+}
+
+/* ── Sections ── */
+section {
+  margin-bottom: 4rem;
+}
+
+/* Section Title (h2) */
+.section-title {
+  font-family: var(--font-headline);
+  font-size: 1.5rem;
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  text-transform: uppercase;
+  margin-bottom: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .section-title {
+    font-size: 1.875rem;
+  }
+}
+
+.section-title::before {
+  content: "";
+  display: inline-block;
+  height: 1px;
+  width: 2rem;
+  background-color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+/* ── TL;DR ── */
+.tldr-box {
+  margin-bottom: 4rem;
+  background-color: rgba(147, 0, 10, 0.1);
+  border: 1px solid rgba(127, 29, 29, 0.3);
+  padding: 2rem;
+}
+
+.tldr-label {
+  font-family: var(--font-headline);
+  font-size: 0.875rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  color: var(--color-primary);
+  margin-bottom: 1rem;
+}
+
+.tldr-box p {
+  color: var(--color-on-surface-variant);
+  line-height: 1.625;
+}
+
+.tldr-box strong {
+  color: var(--color-on-surface);
+}
+
+.tldr-box strong.text-primary {
+  color: var(--color-primary);
+}
+
+/* ── Stat Boxes Grid ── */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+@media (min-width: 768px) {
+  .stat-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.stat-box {
+  background-color: var(--color-surface-container-low);
+  border: 1px solid rgba(96, 62, 57, 0.2);
+  padding: 1rem;
+  text-align: center;
+}
+
+.stat-box-value {
+  display: block;
+  font-size: 1.875rem;
+  font-family: var(--font-headline);
+  font-weight: 900;
+}
+
+.stat-box-value.red { color: #ef4444; }
+.stat-box-value.orange { color: #fb923c; }
+.stat-box-value.yellow { color: #eab308; }
+.stat-box-value.gray { color: #9ca3af; }
+
+.stat-box-label {
+  font-size: 10px;
+  font-family: var(--font-headline);
+  color: #6b7280;
+  letter-spacing: 0.1em;
+}
+
+/* ── Domain Table ── */
+.domain-table-wrapper {
+  background-color: var(--color-surface-container-low);
+  padding: 1.5rem;
+  border: 1px solid rgba(96, 62, 57, 0.2);
+}
+
+.domain-table {
+  width: 100%;
+  font-size: 0.75rem;
+  font-family: var(--font-headline);
+  border-collapse: collapse;
+}
+
+.domain-table thead tr {
+  text-align: left;
+  color: #6b7280;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border-bottom: 1px solid rgba(96, 62, 57, 0.2);
+}
+
+.domain-table th {
+  padding-bottom: 0.75rem;
+  font-weight: 400;
+}
+
+.domain-table th:not(:first-child) {
+  text-align: center;
+}
+
+.domain-table tbody {
+  color: var(--color-on-surface-variant);
+}
+
+.domain-table tbody tr {
+  border-bottom: 1px solid rgba(96, 62, 57, 0.1);
+}
+
+.domain-table td {
+  padding: 0.75rem 0;
+}
+
+.domain-table td:first-child {
+  color: var(--color-on-surface);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+
+.domain-table td:not(:first-child) {
+  text-align: center;
+}
+
+.td-red { color: #ef4444; }
+.td-orange { color: #fb923c; }
+.td-yellow { color: #eab308; }
+.td-gray { color: #9ca3af; }
+.td-bold { color: var(--color-on-surface); font-weight: 700; }
+
+/* ── Threat Cards ── */
+.threat-card {
+  margin-bottom: 2rem;
+  border: 1px solid rgba(96, 62, 57, 0.2);
+  background-color: var(--color-surface-container-lowest);
+}
+
+.threat-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem;
+  border-bottom: 1px solid rgba(96, 62, 57, 0.2);
+  background-color: var(--color-surface-container-low);
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.threat-card-header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.threat-card-header .material-symbols-outlined {
+  color: var(--color-primary);
+  font-size: 1.5rem;
+}
+
+.threat-card-id {
+  font-size: 10px;
+  font-family: var(--font-headline);
+  color: #6b7280;
+  letter-spacing: 0.1em;
+}
+
+.threat-card h3 {
+  font-family: var(--font-headline);
+  font-size: 1.125rem;
+  font-weight: 900;
+  letter-spacing: -0.025em;
+  text-transform: uppercase;
+}
+
+.threat-card-header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.threat-card-cvss {
+  font-family: var(--font-headline);
+  font-weight: 900;
+  color: var(--color-primary);
+}
+
+.threat-card-body {
+  padding: 1.5rem;
+}
+
+.threat-card-body > p {
+  color: var(--color-on-surface-variant);
+  font-size: 0.875rem;
+  line-height: 1.625;
+}
+
+.threat-card-body > p:first-child {
+  margin-bottom: 1.5rem;
+}
+
+.threat-card-body > p.mt-6 {
+  margin-top: 1.5rem;
+}
+
+.threat-card-body > p.mt-4 {
+  margin-top: 1rem;
+}
+
+.threat-card-body strong {
+  color: var(--color-on-surface);
+}
+
+.threat-card-body strong.text-primary {
+  color: var(--color-primary);
+}
+
+.threat-card-body code {
+  color: var(--color-primary);
+  background-color: var(--color-surface-container);
+  padding: 0 0.25rem;
+  font-family: "JetBrains Mono", "Fira Code", "SF Mono", "Cascadia Code", Consolas, monospace;
+  font-size: 0.8125rem;
+}
+
+/* ── Code Blocks ── */
+.code-block {
+  margin: 1rem 0;
+}
+
+.code-block-header {
+  background-color: var(--color-surface-container-highest);
+  padding: 0.5rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(96, 62, 57, 0.2);
+}
+
+.code-block-filename {
+  font-size: 10px;
+  font-family: var(--font-headline);
+  color: #9ca3af;
+  letter-spacing: 0.1em;
+}
+
+.code-block-lang {
+  font-size: 10px;
+  font-family: var(--font-headline);
+  color: #4b5563;
+  letter-spacing: 0.1em;
+}
+
+.code-block pre {
+  background-color: #0a0a0a;
+  padding: 1rem;
+  overflow-x: auto;
+  font-size: 0.875rem;
+  line-height: 1.625;
+  margin: 0;
+}
+
+.code-block code {
+  color: var(--color-on-surface-variant);
+  font-family: "JetBrains Mono", "Fira Code", "SF Mono", "Cascadia Code", Consolas, monospace;
+  font-size: 0.8125rem;
+}
+
+/* ── Impact Box ── */
+.impact-box {
+  margin-top: 1.5rem;
+  background-color: rgba(147, 0, 10, 0.1);
+  border-left: 4px solid #dc2626;
+  padding: 1rem;
+}
+
+.impact-label {
+  font-size: 10px;
+  font-family: var(--font-headline);
+  color: var(--color-primary);
+  letter-spacing: 0.1em;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.impact-box p {
+  color: var(--color-on-surface-variant);
+  font-size: 0.875rem;
+}
+
+/* ── Kill Chain Section ── */
+.kill-chain-box {
+  background-color: var(--color-surface-container-lowest);
+  border: 1px solid rgba(127, 29, 29, 0.4);
+  padding: 2rem;
+  margin-bottom: 2rem;
+}
+
+.kill-chain-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.kill-chain-steps {
+  font-family: var(--font-headline);
+  font-size: 0.875rem;
+}
+
+.kill-step {
+  display: flex;
+  align-items: stretch;
+  gap: 1rem;
+}
+
+.kill-step-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.kill-step-num {
+  width: 2rem;
+  height: 2rem;
+  background-color: var(--color-primary-container);
+  color: var(--color-on-primary-container);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 900;
+  flex-shrink: 0;
+  font-family: var(--font-headline);
+}
+
+.kill-step-line {
+  width: 2px;
+  flex: 1;
+  background-color: rgba(127, 29, 29, 0.3);
+  margin: 0.25rem 0;
+}
+
+.kill-step-content {
+  padding-bottom: 1.5rem;
+}
+
+.kill-step-content.last {
+  padding-bottom: 0;
+}
+
+.kill-step-label {
+  color: var(--color-primary);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  font-size: 0.75rem;
+  font-family: var(--font-headline);
+}
+
+.kill-step-desc {
+  color: var(--color-on-surface-variant);
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+/* ── ASAN Section ── */
+.asan-note {
+  background-color: var(--color-surface-container-low);
+  border-left: 4px solid var(--color-primary);
+  padding: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.asan-note-label {
+  font-size: 10px;
+  font-family: var(--font-headline);
+  color: var(--color-primary);
+  letter-spacing: 0.1em;
+  margin-bottom: 0.5rem;
+}
+
+.asan-note p {
+  color: var(--color-on-surface);
+  font-size: 0.875rem;
+}
+
+/* ── Mini Kill Chains ── */
+.mini-kc {
+  background-color: var(--color-surface-container-low);
+  padding: 1.5rem;
+  border: 1px solid rgba(96, 62, 57, 0.2);
+  transition: border-color 0.2s;
+  margin-bottom: 1rem;
+}
+
+.mini-kc:hover {
+  border-color: rgba(127, 29, 29, 0.4);
+}
+
+.mini-kc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.mini-kc-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.mini-kc-id {
+  font-size: 10px;
+  font-family: var(--font-headline);
+  color: #6b7280;
+  letter-spacing: 0.1em;
+}
+
+.mini-kc h3 {
+  font-family: var(--font-headline);
+  font-weight: 700;
+  font-size: 0.875rem;
+  letter-spacing: -0.025em;
+  text-transform: uppercase;
+}
+
+.mini-kc-header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.mini-kc-vector {
+  font-size: 10px;
+  font-family: var(--font-headline);
+  color: #6b7280;
+  letter-spacing: 0.1em;
+}
+
+.mini-kc-cvss {
+  font-family: var(--font-headline);
+  font-weight: 900;
+  color: var(--color-primary);
+  font-size: 0.875rem;
+}
+
+.mini-kc-steps {
+  color: var(--color-on-surface-variant);
+  font-size: 0.75rem;
+  line-height: 1.625;
+}
+
+/* ── Root Cause ── */
+.root-cause {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  background-color: var(--color-surface-container-low);
+  padding: 1.5rem;
+  border-left: 4px solid rgba(255, 180, 168, 0.3);
+  margin-bottom: 1rem;
+}
+
+.root-cause-num {
+  font-family: var(--font-headline);
+  font-weight: 900;
+  color: rgba(127, 29, 29, 0.4);
+  font-size: 1.5rem;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.root-cause h4 {
+  font-family: var(--font-headline);
+  font-weight: 700;
+  font-size: 0.875rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-on-surface);
+  margin-bottom: 0.25rem;
+}
+
+.root-cause p {
+  color: var(--color-on-surface-variant);
+  font-size: 0.75rem;
+  line-height: 1.625;
+}
+
+/* ── What's at Stake ── */
+.stake-wrapper {
+  background-color: var(--color-surface-container-low);
+  padding: 2rem;
+  border: 1px solid rgba(96, 62, 57, 0.2);
+}
+
+.stake-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .stake-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.stake-item {
+  background-color: var(--color-surface-container);
+  padding: 1rem;
+  border: 1px solid rgba(96, 62, 57, 0.2);
+}
+
+.stake-item-label {
+  font-family: var(--font-headline);
+  font-weight: 900;
+  color: var(--color-primary);
+  font-size: 1.125rem;
+}
+
+.stake-item p {
+  color: var(--color-on-surface-variant);
+  font-size: 0.75rem;
+  margin-top: 0.5rem;
+  line-height: 1.625;
+}
+
+.stake-closing {
+  color: var(--color-on-surface-variant);
+  font-size: 0.875rem;
+  line-height: 1.625;
+  margin-top: 1.5rem;
+  border-top: 1px solid rgba(96, 62, 57, 0.2);
+  padding-top: 1.5rem;
+}
+
+.stake-closing strong {
+  color: var(--color-on-surface);
+}
+
+/* ── Not All Bad ── */
+.positive-list {
+  list-style: none;
+  padding: 0;
+}
+
+.positive-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+  color: var(--color-on-surface-variant);
+  font-size: 0.875rem;
+}
+
+.positive-list .material-symbols-outlined {
+  color: #22c55e;
+  font-size: 1.125rem;
+  margin-top: 0.125rem;
+  flex-shrink: 0;
+}
+
+.positive-list strong {
+  color: var(--color-on-surface);
+}
+
+/* ── Final Assessment ── */
+.final-box {
+  background-color: rgba(147, 0, 10, 0.1);
+  border: 1px solid rgba(127, 29, 29, 0.3);
+  padding: 2rem;
+}
+
+.final-box p {
+  font-size: 0.875rem;
+  line-height: 1.625;
+  margin-bottom: 1rem;
+}
+
+.final-box p:first-child {
+  color: var(--color-on-surface);
+}
+
+.final-box p:not(:first-child) {
+  color: var(--color-on-surface-variant);
+}
+
+.final-box p:last-child {
+  margin-bottom: 0;
+}
+
+.final-box strong {
+  color: var(--color-primary);
+}
+
+/* ── Footer ── */
+footer {
+  border-top: 1px solid rgba(96, 62, 57, 0.2);
+  padding-top: 2rem;
+}
+
+.footer-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.footer-tag {
+  background-color: var(--color-surface-container-high);
+  padding: 0.25rem 0.75rem;
+  font-size: 10px;
+  font-family: var(--font-headline);
+  letter-spacing: 0.1em;
+  color: #9ca3af;
+}
+
+.footer-disclaimer {
+  font-size: 10px;
+  font-family: var(--font-headline);
+  color: #4b5563;
+  letter-spacing: 0.1em;
+}
+
+/* ── Inline code in paragraphs ── */
+p code, li code {
+  color: var(--color-primary);
+  background-color: var(--color-surface-container);
+  padding: 0 0.25rem;
+  font-family: "JetBrains Mono", "Fira Code", "SF Mono", "Cascadia Code", Consolas, monospace;
+  font-size: 0.8125rem;
+}
+
+/* ── General paragraph in sections ── */
+.section-desc {
+  color: var(--color-on-surface-variant);
+  font-size: 0.875rem;
+  line-height: 1.625;
+}
+
+.section-desc.mb-8 { margin-bottom: 2rem; }
+.section-desc.mb-6 { margin-bottom: 1.5rem; }
+.section-desc.mt-6 { margin-top: 1.5rem; }
+</style>
+</head>
+<body>
+
+<article>
+
+  <!-- Header -->
+  <header>
+    <div class="header-meta">
+      <span class="badge-critical">CRITICAL</span>
+      <span class="header-label">APR_02_2026</span>
+      <span class="header-divider"></span>
+      <span class="header-label">25_MIN_READ</span>
+    </div>
+
+    <h1>eSIM<span class="text-primary-container">_BLEED</span></h1>
+
+    <p class="header-desc">
+      lpac + OpenEUICC에서 93개의 취약점을 발견했다. CVSS 9.8 킬 체인으로
+      네트워크 공격자가 SIM 인증 정보를 탈취할 수 있다. 모든 오픈소스
+      eSIM 도구가 TLS 검증을 비활성화한 채 배포되고 있다.
+    </p>
+
+    <div class="header-author-bar">
+      <div class="author-info">
+        <div class="author-icon">
+          <span class="material-symbols-outlined">sim_card</span>
+        </div>
+        <div>
+          <p class="author-name">SOURCE_BLEED_TEAM</p>
+          <p class="author-role">eSIM Security Research</p>
+        </div>
+      </div>
+      <div class="header-stats">
+        <div class="stat-item">
+          <span class="stat-value">93</span>
+          <span class="stat-label">VULNS</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value">9.8</span>
+          <span class="stat-label">MAX_CVSS</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value">6</span>
+          <span class="stat-label">KILL_CHAINS</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- TL;DR -->
+  <section class="tldr-box">
+    <h2 class="tldr-label">// TL;DR</h2>
+    <p>
+      <strong>lpac</strong>은 가장 널리
+      사용되는 오픈소스 eSIM LPA 클라이언트다.
+      <strong>OpenEUICC</strong>는 lpac을
+      JNI로 호출하는 대표적인 Android eSIM 관리 앱이다. 이 두 프로젝트가
+      오픈소스 eSIM 생태계의 근간을 이루고 있다. 감사 결과,
+      <strong class="text-primary">두 프로젝트 모두 TLS 인증서 검증이 완전히 비활성화된 상태로
+      배포</strong>되고 있음을 확인했다. 이는 모든 SM-DP+ 연결이 단순한
+      중간자 공격에 노출됨을 의미한다. 여기에 DER 파서의 정수
+      오버플로우와 검증 없는 JNI 포인터 캐스팅이 결합되면, 네트워크
+      공격자가 가입자 인증 정보(Ki, OPc, IMSI)를 탈취하거나 원격
+      코드 실행을 달성할 수 있다.
+    </p>
+  </section>
+
+  <!-- 01 // DAMAGE_REPORT -->
+  <section>
+    <h2 class="section-title">01 // DAMAGE_REPORT</h2>
+
+    <div class="stat-grid">
+      <div class="stat-box">
+        <span class="stat-box-value red">12</span>
+        <span class="stat-box-label">CRITICAL</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-box-value orange">26</span>
+        <span class="stat-box-label">HIGH</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-box-value yellow">33</span>
+        <span class="stat-box-label">MEDIUM</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-box-value gray">22</span>
+        <span class="stat-box-label">LOW</span>
+      </div>
+    </div>
+
+    <div class="domain-table-wrapper">
+      <table class="domain-table">
+        <thead>
+          <tr>
+            <th>DOMAIN</th>
+            <th>CRIT</th>
+            <th>HIGH</th>
+            <th>MED</th>
+            <th>LOW</th>
+            <th>TOTAL</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>MEMORY / PARSER</td>
+            <td class="td-red">5</td>
+            <td class="td-orange">10</td>
+            <td class="td-yellow">11</td>
+            <td class="td-gray">8</td>
+            <td class="td-bold">34</td>
+          </tr>
+          <tr>
+            <td>NETWORK / TLS</td>
+            <td class="td-red">3</td>
+            <td class="td-orange">5</td>
+            <td class="td-yellow">2</td>
+            <td class="td-gray">2</td>
+            <td class="td-bold">12</td>
+          </tr>
+          <tr>
+            <td>DRIVER / OS</td>
+            <td class="td-red">2</td>
+            <td class="td-orange">5</td>
+            <td class="td-yellow">7</td>
+            <td class="td-gray">5</td>
+            <td class="td-bold">19</td>
+          </tr>
+          <tr>
+            <td>JNI BRIDGE</td>
+            <td class="td-red">2</td>
+            <td class="td-orange">3</td>
+            <td class="td-yellow">5</td>
+            <td class="td-gray">-</td>
+            <td class="td-bold">10</td>
+          </tr>
+          <tr>
+            <td>ANDROID</td>
+            <td class="td-red">-</td>
+            <td class="td-orange">3</td>
+            <td class="td-yellow">8</td>
+            <td class="td-gray">7</td>
+            <td class="td-bold">18</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 02 // THE_TRIPLE_THREAT -->
+  <section>
+    <h2 class="section-title">02 // THE_TRIPLE_THREAT</h2>
+    <p class="section-desc mb-8">
+      세 가지 종류의 취약점이 결합되어 가장 치명적인 공격 표면을
+      형성한다. 각각 단독으로도 위험하지만, 셋이 합쳐지면 CVSS 9.8
+      킬 체인이 완성된다.
+    </p>
+
+    <!-- THREAT_01: TLS -->
+    <div class="threat-card">
+      <div class="threat-card-header">
+        <div class="threat-card-header-left">
+          <span class="material-symbols-outlined">lock_open</span>
+          <div>
+            <span class="threat-card-id">THREAT_01</span>
+            <h3>TLS VALIDATION: OFF</h3>
+          </div>
+        </div>
+        <div class="threat-card-header-right">
+          <span class="badge-critical">CRITICAL</span>
+          <span class="threat-card-cvss">8.1</span>
+        </div>
+      </div>
+      <div class="threat-card-body">
+        <p>
+          lpac의 두 HTTP 백엔드 &mdash; curl과 WinHTTP &mdash; 모두
+          인증서 검증이
+          <strong class="text-primary">완전히 비활성화</strong>된
+          상태로 배포된다. 설정 오류가 아니다. 하드코딩이다.
+        </p>
+
+        <div class="code-block">
+          <div class="code-block-header">
+            <span class="code-block-filename">driver/http/curl.c:91-92</span>
+            <span class="code-block-lang">C</span>
+          </div>
+          <pre><code>libcurl._curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+libcurl._curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);</code></pre>
+        </div>
+
+        <div class="code-block">
+          <div class="code-block-header">
+            <span class="code-block-filename">driver/http/winhttp.c:71</span>
+            <span class="code-block-lang">C</span>
+          </div>
+          <pre><code>WinHttpSetOption(hRequest, WINHTTP_OPTION_SECURITY_FLAGS,
+    &amp;(DWORD){SECURITY_FLAG_IGNORE_UNKNOWN_CA}, sizeof(DWORD));</code></pre>
+        </div>
+
+        <p class="mt-6">
+          OpenEUICC는 여기서 한 술 더 뜬다.
+          <code>AllowAllTrustManager</code>
+          &mdash;
+          <code>checkServerTrusted()</code>
+          가 아무 동작 없이 리턴하는 TrustManager를 사용한다. Lint 경고는
+          <code>@SuppressLint</code>로 억제되어 있다.
+        </p>
+
+        <p class="mt-4">
+          결과적으로
+          <strong>어떤 인증서든 수락</strong>된다. 자체 서명, 만료, 도메인 불일치, 폐기 &mdash; 전부
+          통과한다. 카페 Wi-Fi에서 DNS 스푸핑만 가능한 공격자도
+          SM-DP+ 서버를 사칭하여 가입자 마스터 키가 포함된 eSIM 프로파일
+          다운로드를 가로챌 수 있다.
+        </p>
+
+        <div class="impact-box">
+          <span class="impact-label">IMPACT</span>
+          <p>GSMA SGP.22 RSP 보안 모델이 완전히 무력화된다. 단독 발견만으로도 CVE 부여 대상이다.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- THREAT_02: DER Parser -->
+    <div class="threat-card">
+      <div class="threat-card-header">
+        <div class="threat-card-header-left">
+          <span class="material-symbols-outlined">data_object</span>
+          <div>
+            <span class="threat-card-id">THREAT_02</span>
+            <h3>DER PARSER: CHAINABLE OVERFLOW</h3>
+          </div>
+        </div>
+        <div class="threat-card-header-right">
+          <span class="badge-critical">CRITICAL</span>
+          <span class="threat-card-cvss">8.1</span>
+        </div>
+      </div>
+      <div class="threat-card-body">
+        <p>
+          <code>euicc/derutil.c</code>
+          의 자체 구현 DER/ASN.1 파서는 모든 eSIM 프로토콜 처리의
+          핵심이다. 이 파서에 체이닝 가능한 세 가지 정수 오버플로우가
+          존재하며, 전체 파스 트리를 오염시킨다.
+        </p>
+
+        <div class="code-block">
+          <div class="code-block-header">
+            <span class="code-block-filename">derutil.c:40-52 &#x2014; Length field overflow</span>
+            <span class="code-block-lang">C</span>
+          </div>
+          <pre><code>if (result-&gt;length &amp; 0x80) {
+    uint8_t lengthlen = result-&gt;length &amp; 0x7F;  // max 127, no cap
+    result-&gt;length = 0;
+    for (int i = 0; i &lt; lengthlen; i++) {
+        result-&gt;length = (result-&gt;length &lt;&lt; 8) | *cptr;
+        // lengthlen &gt;= 5 &#x2192; uint32_t wraps around
+        cptr++; rlen--;
+    }
+}</code></pre>
+        </div>
+
+        <div class="code-block">
+          <div class="code-block-header">
+            <span class="code-block-filename">derutil.c:61 &#x2014; self.length poisoning</span>
+            <span class="code-block-lang">C</span>
+          </div>
+          <pre><code>result-&gt;self.length = result-&gt;value - result-&gt;self.ptr + result-&gt;length;
+// length=0xFFFFFFFE + 3-byte header &#x2192; self.length=1 (overflow)
+// Every subsequent unpack_next() offset is now corrupted</code></pre>
+        </div>
+
+        <div class="code-block">
+          <div class="code-block-header">
+            <span class="code-block-filename">derutil.c:66-75 &#x2014; Underflow to ~4GB read</span>
+            <span class="code-block-lang">C</span>
+          </div>
+          <pre><code>cptr = prev-&gt;self.ptr + prev-&gt;self.length;
+rlen = buffer_len - (cptr - buffer);
+// When self.length is corrupted: cptr &gt; buffer + buffer_len
+// rlen wraps to ~4,294,967,295 &#x2192; reads far beyond buffer</code></pre>
+        </div>
+
+        <div class="impact-box">
+          <span class="impact-label">IMPACT</span>
+          <p>체인: 조작된 length 필드 &rarr; self.length 오염 &rarr; unpack_next가 임의 메모리를 읽는다. 모든 ES10a/b/c 및 ES8+ 파서 경로가 영향을 받는다. SM-DP+ 응답을 통해 네트워크에서 도달 가능하다.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- THREAT_03: JNI Bridge -->
+    <div class="threat-card">
+      <div class="threat-card-header">
+        <div class="threat-card-header-left">
+          <span class="material-symbols-outlined">memory</span>
+          <div>
+            <span class="threat-card-id">THREAT_03</span>
+            <h3>JNI BRIDGE: ARBITRARY MEMORY READ</h3>
+          </div>
+        </div>
+        <div class="threat-card-header-right">
+          <span class="badge-critical">CRITICAL</span>
+          <span class="threat-card-cvss">7.8</span>
+        </div>
+      </div>
+      <div class="threat-card-body">
+        <p>
+          OpenEUICC는 JNI를 통해 lpac을 호출한다.
+          <code>lpac-jni.c</code>
+          의 브릿지 코드는 Java
+          <code>jlong</code>
+          값을 &mdash; 어떤 검증도 없이 &mdash; C 포인터로 직접
+          캐스팅한다. 이러한 호출 지점이 15곳에 존재한다.
+        </p>
+
+        <div class="code-block">
+          <div class="code-block-header">
+            <span class="code-block-filename">lpac-jni.c:273 &#x2014; stringDeref: double dereference</span>
+            <span class="code-block-lang">C</span>
+          </div>
+          <pre><code>// Java passes any 64-bit value as jlong "handle"
+// C side blindly casts and double-dereferences:
+return toJString(env, *((char **) curr));
+// curr = attacker-controlled address &#x2192; arbitrary memory read primitive</code></pre>
+        </div>
+
+        <p class="mt-6">
+          추가로, 약 30개의 JNI 반환값(<code>GetStringUTFChars</code>,
+          <code>FindClass</code>,
+          <code>calloc</code>)에 대한 NULL 검사가 전혀 없다. JNI 브릿지는 Java의 타입
+          안전성이 끝나고 C의 포인터 연산이 시작되는 경계 &mdash;
+          그런데 이 경계에 어떤 안전장치도 없다.
+        </p>
+
+        <div class="impact-box">
+          <span class="impact-label">IMPACT</span>
+          <p>Java 측에서 임의 메모리 읽기가 가능하다. 민감 데이터 제로화가 전혀 이루어지지 않으므로, 이전 세션의 ICCID/Ki/IMEI를 힙에서 복구할 수 있다.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 03 // KILL_CHAIN -->
+  <section>
+    <h2 class="section-title">03 // KILL_CHAIN: REMOTE PROFILE HIJACKING</h2>
+
+    <div class="kill-chain-box">
+      <div class="kill-chain-header">
+        <span class="badge-critical">CVSS 9.8</span>
+        <span class="header-label">REMOTE / NO_AUTH / NO_INTERACTION</span>
+      </div>
+
+      <div class="kill-chain-steps">
+        <div class="kill-step">
+          <div class="kill-step-indicator">
+            <div class="kill-step-num">01</div>
+            <div class="kill-step-line"></div>
+          </div>
+          <div class="kill-step-content">
+            <span class="kill-step-label">DNS_SPOOF</span>
+            <p class="kill-step-desc">공격자가 DNS를 오염시킨다: SM-DP+ 도메인이 공격자 IP로 해석됨</p>
+          </div>
+        </div>
+
+        <div class="kill-step">
+          <div class="kill-step-indicator">
+            <div class="kill-step-num">02</div>
+            <div class="kill-step-line"></div>
+          </div>
+          <div class="kill-step-content">
+            <span class="kill-step-label">TLS_BYPASS</span>
+            <p class="kill-step-desc">lpac이 자체 서명 인증서로 연결 &mdash; VERIFYPEER=0이 모든 인증서를 수락</p>
+          </div>
+        </div>
+
+        <div class="kill-step">
+          <div class="kill-step-indicator">
+            <div class="kill-step-num">03</div>
+            <div class="kill-step-line"></div>
+          </div>
+          <div class="kill-step-content">
+            <span class="kill-step-label">PAYLOAD_INJECT</span>
+            <p class="kill-step-desc">공격자가 악의적 DER이 base64 인코딩된 조작된 ES9+ JSON을 응답</p>
+          </div>
+        </div>
+
+        <div class="kill-step">
+          <div class="kill-step-indicator">
+            <div class="kill-step-num">04</div>
+            <div class="kill-step-line"></div>
+          </div>
+          <div class="kill-step-content">
+            <span class="kill-step-label">BASE64_OVERFLOW</span>
+            <p class="kill-step-desc">base64_decode_len() 정수 오버플로우 &rarr; 작은 버퍼 할당, 큰 쓰기</p>
+          </div>
+        </div>
+
+        <div class="kill-step">
+          <div class="kill-step-indicator">
+            <div class="kill-step-num">05</div>
+            <div class="kill-step-line"></div>
+          </div>
+          <div class="kill-step-content">
+            <span class="kill-step-label">DER_CHAIN</span>
+            <p class="kill-step-desc">Length 필드 조작 &rarr; self.length 오염 &rarr; unpack_next OOB R/W</p>
+          </div>
+        </div>
+
+        <div class="kill-step">
+          <div class="kill-step-indicator">
+            <div class="kill-step-num">06</div>
+            <div class="kill-step-line"></div>
+          </div>
+          <div class="kill-step-content">
+            <span class="kill-step-label">HEAP_CORRUPT</span>
+            <p class="kill-step-desc">힙 메타데이터 덮어쓰기 &rarr; 코드 실행</p>
+          </div>
+        </div>
+
+        <div class="kill-step">
+          <div class="kill-step-indicator">
+            <div class="kill-step-num">07</div>
+          </div>
+          <div class="kill-step-content last">
+            <span class="kill-step-label">EXFILTRATE</span>
+            <p class="kill-step-desc">가입자 인증 정보 추출: Ki, OPc, IMSI &mdash; SIM 복제 달성</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p class="section-desc">
+      빌드 보안 강화 플래그의 부재(<code>FORTIFY_SOURCE</code> 없음,
+      <code>stack-protector</code> 없음, PIE/RELRO 없음)로 인해 힙 손상에서 코드 실행까지 어떤
+      제동장치도 없다. 네트워크 포지션에서 완전한 가입자 침해까지
+      이어지는 교과서적 체인이다.
+    </p>
+  </section>
+
+  <!-- 04 // ASAN_CONFIRMED -->
+  <section>
+    <h2 class="section-title">04 // ASAN_CONFIRMED: THE ZERO-LENGTH ICCID</h2>
+    <p class="section-desc mb-6">
+      발견 사항 중 하나가 AddressSanitizer 크래시 재현을 통해 독립적으로
+      확인되었다. SM-DP+ 응답 내 길이 0인 ICCID TLV(<code>5A 00</code>)가
+      <code>hexutil.c</code>에서 정수 언더플로우를 유발한다:
+    </p>
+
+    <div class="code-block">
+      <div class="code-block-header">
+        <span class="code-block-filename">hexutil.c:107 &#x2014; bin2gsmbcd</span>
+        <span class="code-block-lang">C</span>
+      </div>
+      <pre><code>// bin_len == 0 (from zero-length ICCID TLV)
+int n = euicc_hexutil_bin2hex(output, output_len, bin, bin_len);
+// n = 0
+n -= 1;
+// n = -1, but cast to uint32_t = 0xFFFFFFFF
+gsmbcd_swap_chars(output, n);
+// Attempts to swap 4,294,967,295 bytes &#x2192; ASAN: heap-buffer-overflow</code></pre>
+    </div>
+
+    <div class="asan-note">
+      <p class="asan-note-label">REPRODUCTION STATUS</p>
+      <p>
+        외부 연구자(Jhury Kevin Lastre)에 의해 ASAN 크래시가 확인되었다.
+        트리거 조건은 SM-DP+ 응답 내 단일 비정상 TLV뿐이다. TLS 검증이
+        비활성화된 상태에서는 공격자 측 인증이 필요 없다.
+      </p>
+    </div>
+  </section>
+
+  <!-- 05 // MORE_KILL_CHAINS -->
+  <section>
+    <h2 class="section-title">05 // MORE_KILL_CHAINS</h2>
+
+    <div class="mini-kc">
+      <div class="mini-kc-header">
+        <div class="mini-kc-header-left">
+          <span class="mini-kc-id">KC-2</span>
+          <h3>MALICIOUS_eUICC &rarr; RCE</h3>
+        </div>
+        <div class="mini-kc-header-right">
+          <span class="mini-kc-vector">PHYSICAL</span>
+          <span class="mini-kc-cvss">7.5</span>
+        </div>
+      </div>
+      <p class="mini-kc-steps">악성 SIM 카드 &rarr; DER length=0xFFFFFFFE &rarr; self.length 오버플로우 &rarr; ICCID malloc(1) &rarr; 힙 오버플로우 &rarr; stack protector 없음 &rarr; RCE</p>
+    </div>
+
+    <div class="mini-kc">
+      <div class="mini-kc-header">
+        <div class="mini-kc-header-left">
+          <span class="mini-kc-id">KC-3</span>
+          <h3>MALICIOUS_APP &rarr; PROFILE_THEFT</h3>
+        </div>
+        <div class="mini-kc-header-right">
+          <span class="mini-kc-vector">ANDROID</span>
+          <span class="mini-kc-cvss">7.5</span>
+        </div>
+      </div>
+      <p class="mini-kc-steps">악성 앱 &rarr; lpa: URI 인텐트(exported, 권한 가드 없음) &rarr; 공격자 SMDP 주입 &rarr; TLS 우회 &rarr; 프로파일 탈취</p>
+    </div>
+
+    <div class="mini-kc">
+      <div class="mini-kc-header">
+        <div class="mini-kc-header-left">
+          <span class="mini-kc-id">KC-4</span>
+          <h3>WINHTTP_STACK_OVERFLOW &rarr; RCE</h3>
+        </div>
+        <div class="mini-kc-header-right">
+          <span class="mini-kc-vector">WINDOWS</span>
+          <span class="mini-kc-cvss">8.1</span>
+        </div>
+      </div>
+      <p class="mini-kc-steps">악성 QR 코드 &rarr; 256자 초과 hostname &rarr; sizeof/wchar 불일치 &rarr; 스택 버퍼 오버플로우 &rarr; ASLR/canary 없음 &rarr; 직접 RCE</p>
+    </div>
+
+    <div class="mini-kc">
+      <div class="mini-kc-header">
+        <div class="mini-kc-header-left">
+          <span class="mini-kc-id">KC-5</span>
+          <h3>LOCAL_SUPPLY_CHAIN</h3>
+        </div>
+        <div class="mini-kc-header-right">
+          <span class="mini-kc-vector">LOCAL</span>
+          <span class="mini-kc-cvss">7.8</span>
+        </div>
+      </div>
+      <p class="mini-kc-steps">환경변수 인젝션(APDU_UQMI_PROGRAM) + SO 하이재킹(dlopen 검증 없음) + Magisk TMPDIR 레이스 &rarr; root 포함 임의 실행</p>
+    </div>
+
+    <div class="mini-kc">
+      <div class="mini-kc-header">
+        <div class="mini-kc-header-left">
+          <span class="mini-kc-id">KC-6</span>
+          <h3>JNI_HANDLE &rarr; MEMORY_READ</h3>
+        </div>
+        <div class="mini-kc-header-right">
+          <span class="mini-kc-vector">LOCAL</span>
+          <span class="mini-kc-cvss">7.0</span>
+        </div>
+      </div>
+      <p class="mini-kc-steps">jlong 핸들 조작 &rarr; 이중 포인터 역참조 &rarr; 임의 메모리 읽기 &rarr; 힙에서 ICCID/Ki 복구(제로화 없음)</p>
+    </div>
+  </section>
+
+  <!-- 06 // ROOT_CAUSE_ANALYSIS -->
+  <section>
+    <h2 class="section-title">06 // ROOT_CAUSE_ANALYSIS</h2>
+    <p class="section-desc mb-8">
+      93개의 발견 사항은 5가지 체계적 패턴으로 수렴한다. 개별 증상이
+      아닌, 패턴을 고쳐야 한다.
+    </p>
+
+    <div class="root-cause">
+      <span class="root-cause-num">01</span>
+      <div>
+        <h4>ZERO-LENGTH DEFENSE ABSENT</h4>
+        <p>bin2hex, bin2gsmbcd, base64_decode &mdash; 어느 것도 len=0을 처리하지 않는다. TLV length=0은 유효한 BER/DER이다.</p>
+      </div>
+    </div>
+
+    <div class="root-cause">
+      <span class="root-cause-num">02</span>
+      <div>
+        <h4>INTEGER OVERFLOW GUARDS MISSING</h4>
+        <p>2*bin_len, length*2+1, (len+2)/3*4+1 &mdash; 모든 크기 계산에 가드가 없다. uint32_t 오버플로우 &rarr; 작은 malloc &rarr; 대량 쓰기.</p>
+      </div>
+    </div>
+
+    <div class="root-cause">
+      <span class="root-cause-num">03</span>
+      <div>
+        <h4>RETURN VALUES IGNORED</h4>
+        <p>bin2hex/bin2gsmbcd는 오류 시 -1을 반환한다. 모든 ES8/ES9/ES10 파서가 이를 무시하고 오염된 데이터로 진행한다.</p>
+      </div>
+    </div>
+
+    <div class="root-cause">
+      <span class="root-cause-num">04</span>
+      <div>
+        <h4>JNI RETURNS UNCHECKED</h4>
+        <p>GetStringUTFChars, FindClass, calloc &mdash; 30곳 이상의 호출 지점에서 NULL 검사가 없다. Java-C 경계에 안전망이 전혀 없다.</p>
+      </div>
+    </div>
+
+    <div class="root-cause">
+      <span class="root-cause-num">05</span>
+      <div>
+        <h4>BUILD HARDENING ABSENT</h4>
+        <p>FORTIFY_SOURCE 없음, stack-protector 없음, PIE/RELRO 없음. 익스플로잇 개발 난이도가 '어려움'에서 '사소함'으로 떨어진다.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 07 // WHAT_IS_AT_STAKE -->
+  <section>
+    <h2 class="section-title">07 // WHAT_IS_AT_STAKE</h2>
+    <div class="stake-wrapper">
+      <p class="section-desc mb-6">
+        eSIM 프로파일에는 다음이 포함되어 있다:
+      </p>
+      <div class="stake-grid">
+        <div class="stake-item">
+          <span class="stake-item-label">Ki</span>
+          <p>가입자 인증 키. 이것만 있으면 공격자가 SIM을 복제하여 모든 통화와 SMS를 수신할 수 있다.</p>
+        </div>
+        <div class="stake-item">
+          <span class="stake-item-label">OPc</span>
+          <p>통신사 변형 알고리즘 설정값. Ki와 결합하면 완전한 Milenage 인증 우회가 가능하다.</p>
+        </div>
+        <div class="stake-item">
+          <span class="stake-item-label">IMSI</span>
+          <p>국제 모바일 가입자 식별번호. 추적, 표적 감청, 신원 도용이 가능해진다.</p>
+        </div>
+      </div>
+      <p class="stake-closing">
+        이것들은 모바일 보안의 핵심 자산이다. SM-DP+ 프로파일
+        다운로드는 이 인증 정보가 네트워크를 통과하는
+        <strong>유일한 순간</strong>이다.
+        GSMA는 바로 이 순간을 보호하기 위해 SGP.22에 TLS 상호 인증을
+        설계했다. lpac은 그 보호를 완전히 제거하고 있다.
+      </p>
+    </div>
+  </section>
+
+  <!-- 08 // NOT_ALL_BAD -->
+  <section>
+    <h2 class="section-title">08 // NOT_ALL_BAD</h2>
+    <p class="section-desc mb-6">
+      공정하게 평가하자. 두 프로젝트 모두 실질적인 보안 강점이 있다:
+    </p>
+    <ul class="positive-list">
+      <li>
+        <span class="material-symbols-outlined">check_circle</span>
+        <span>
+          <strong>GSMA CI 루트 인증서 피닝</strong> &mdash;
+          TLS 검증이 활성화된 경우, OpenEUICC는 시스템 CA 저장소가 아닌 GSMA CI 루트에 핀닝한다
+        </span>
+      </li>
+      <li>
+        <span class="material-symbols-outlined">check_circle</span>
+        <span>
+          <strong>HTTPS 강제</strong> &mdash;
+          HttpInterfaceImpl이 https:// 이외의 URL을 거부한다
+        </span>
+      </li>
+      <li>
+        <span class="material-symbols-outlined">check_circle</span>
+        <span>
+          <strong>posix_spawnp over system()</strong> &mdash;
+          uqmi가 명시적 argv를 사용하여 쉘 인젝션을 방지한다
+        </span>
+      </li>
+      <li>
+        <span class="material-symbols-outlined">check_circle</span>
+        <span>
+          <strong>권한 분리</strong> &mdash;
+          OpenEUICC가 컴파일 타임에 권한/비권한 빌드를 분리한다
+        </span>
+      </li>
+      <li>
+        <span class="material-symbols-outlined">check_circle</span>
+        <span>
+          <strong>EuiccService 권한 가드</strong> &mdash;
+          시스템 서비스에 BIND_EUICC_SERVICE 서명 보호가 적용되어 있다
+        </span>
+      </li>
+    </ul>
+  </section>
+
+  <!-- 09 // FINAL_ASSESSMENT -->
+  <section>
+    <h2 class="section-title">09 // FINAL_ASSESSMENT</h2>
+    <div class="final-box">
+      <p>
+        오픈소스 eSIM 스택에는 개별 버그를 넘어서는 근본적인 보안
+        문제가 있다. 기본값으로 비활성화된 TLS 검증, 정수 오버플로우
+        가드 없이 작성된 자체 ASN.1 파서, 타입 안전성이 없는 JNI
+        브릿지 &mdash; 이것들은 아키텍처적 문제이며, 아키텍처적
+        해결이 필요하다.
+      </p>
+      <p>
+        가장 시급한 수정은 놀라울 정도로 간단하다:
+        <strong>CURLOPT_SSL_VERIFYPEER를 1로 설정</strong>하면 된다. 한 줄의 코드 변경으로 가장 위험한 공격 벡터가
+        차단된다. DER 파서와 JNI 브릿지는 더 깊은 작업이 필요하지만,
+        TLS 수정은 몇 년 전에 이루어졌어야 할 한 줄짜리 변경이다.
+      </p>
+      <p>
+        lpac이나 OpenEUICC &mdash; 또는 이들 기반의 어떤 도구든 &mdash;
+        사용하고 있다면, eSIM 프로비저닝 트래픽이 네트워크 인접
+        공격자에게 가로챌 수 있었다고 가정해야 한다.
+      </p>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-tags">
+      <span class="footer-tag">eSIM</span>
+      <span class="footer-tag">GSMA</span>
+      <span class="footer-tag">SGP.22</span>
+      <span class="footer-tag">lpac</span>
+      <span class="footer-tag">OpenEUICC</span>
+      <span class="footer-tag">TLS</span>
+      <span class="footer-tag">DER</span>
+      <span class="footer-tag">JNI</span>
+      <span class="footer-tag">SAST</span>
+    </div>
+    <p class="footer-disclaimer">
+      RESPONSIBLE DISCLOSURE IN PROGRESS. FULL TECHNICAL DETAILS WILL BE
+      RELEASED AFTER VENDOR PATCHES ARE AVAILABLE.
+    </p>
+  </footer>
+
+</article>
+
+</body>
+</html>

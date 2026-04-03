@@ -1,0 +1,1712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>eSIM_BLEED: 93 VULNS IN THE OPEN-SOURCE eSIM STACK | SOURCE BLEED</title>
+  <meta name="description" content="We audited lpac and OpenEUICC — the most widely used open-source eSIM tools — and found 93 vulnerabilities, including a CVSS 9.8 remote kill chain that exposes subscriber credentials.">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=Space+Grotesk:wght@400;700;800;900&display=swap" rel="stylesheet">
+  <!-- Material Symbols -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0">
+
+  <style>
+    /* ── CSS Custom Properties (from globals.css theme) ── */
+    :root {
+      --color-surface: #131313;
+      --color-surface-dim: #131313;
+      --color-surface-bright: #393939;
+      --color-surface-container-lowest: #0e0e0e;
+      --color-surface-container-low: #1b1b1b;
+      --color-surface-container: #1f1f1f;
+      --color-surface-container-high: #2a2a2a;
+      --color-surface-container-highest: #353535;
+      --color-surface-variant: #353535;
+
+      --color-on-surface: #e2e2e2;
+      --color-on-surface-variant: #ebbbb4;
+      --color-on-background: #e2e2e2;
+      --color-background: #131313;
+
+      --color-primary: #ffb4a8;
+      --color-primary-container: #ff5540;
+      --color-primary-fixed: #ffdad4;
+      --color-primary-fixed-dim: #ffb4a8;
+      --color-on-primary: #690100;
+      --color-on-primary-container: #5c0000;
+      --color-on-primary-fixed: #410000;
+      --color-on-primary-fixed-variant: #930100;
+      --color-inverse-primary: #c00100;
+
+      --color-secondary: #ffb4a8;
+      --color-secondary-container: #970100;
+      --color-secondary-fixed: #ffdad4;
+      --color-secondary-fixed-dim: #ffb4a8;
+      --color-on-secondary: #690100;
+      --color-on-secondary-container: #ff9f90;
+      --color-on-secondary-fixed: #410000;
+      --color-on-secondary-fixed-variant: #930100;
+
+      --color-tertiary: #acc7ff;
+      --color-tertiary-container: #488fff;
+      --color-tertiary-fixed: #d7e2ff;
+      --color-tertiary-fixed-dim: #acc7ff;
+      --color-on-tertiary: #002f67;
+      --color-on-tertiary-container: #00285b;
+      --color-on-tertiary-fixed: #001a40;
+      --color-on-tertiary-fixed-variant: #004491;
+
+      --color-error: #ffb4ab;
+      --color-error-container: #93000a;
+      --color-on-error: #690005;
+      --color-on-error-container: #ffdad6;
+
+      --color-outline: #b18780;
+      --color-outline-variant: #603e39;
+
+      --color-surface-tint: #ffb4a8;
+      --color-inverse-surface: #e2e2e2;
+      --color-inverse-on-surface: #303030;
+
+      --font-headline: "Space Grotesk", sans-serif;
+      --font-body: "Inter", sans-serif;
+      --font-label: "Space Grotesk", sans-serif;
+    }
+
+    /* ── Reset & Base ── */
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      border-radius: 0 !important;
+    }
+
+    body {
+      background-color: var(--color-surface);
+      color: var(--color-on-surface);
+      font-family: var(--font-body);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    ::selection {
+      background-color: var(--color-primary-container);
+      color: white;
+    }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: #0e0e0e; }
+    ::-webkit-scrollbar-thumb { background: #603e39; }
+    ::-webkit-scrollbar-thumb:hover { background: #ff5540; }
+
+    /* ── Material Symbols ── */
+    .material-symbols-outlined {
+      font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+      vertical-align: middle;
+    }
+
+    /* ── Layout ── */
+    .article-container {
+      max-width: 896px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 6rem;
+    }
+
+    @media (min-width: 768px) {
+      .article-container {
+        padding-left: 3rem;
+        padding-right: 3rem;
+      }
+    }
+
+    /* ── Typography ── */
+    .font-headline {
+      font-family: var(--font-headline);
+    }
+
+    .text-on-surface { color: var(--color-on-surface); }
+    .text-on-surface-variant { color: var(--color-on-surface-variant); }
+    .text-primary { color: var(--color-primary); }
+    .text-primary-container { color: var(--color-primary-container); }
+
+    strong { font-weight: 700; }
+
+    code {
+      font-family: "SF Mono", "Fira Code", "Fira Mono", "Roboto Mono", "Courier New", monospace;
+    }
+
+    /* ── Header ── */
+    .header-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .badge-critical {
+      background-color: var(--color-error-container);
+      color: var(--color-on-error-container);
+      padding: 0.25rem 0.75rem;
+      font-size: 10px;
+      font-family: var(--font-headline);
+      font-weight: 900;
+      letter-spacing: 0.1em;
+    }
+
+    .meta-label {
+      font-size: 10px;
+      font-family: var(--font-headline);
+      color: var(--color-on-surface-variant);
+      letter-spacing: 0.1em;
+    }
+
+    .meta-divider {
+      width: 2rem;
+      height: 1px;
+      background-color: var(--color-outline-variant);
+    }
+
+    h1 {
+      font-family: var(--font-headline);
+      font-size: 3rem;
+      font-weight: 900;
+      letter-spacing: -0.05em;
+      line-height: 1;
+      text-transform: uppercase;
+      margin-bottom: 1.5rem;
+    }
+
+    @media (min-width: 768px) {
+      h1 { font-size: 4.5rem; }
+    }
+
+    .header-subtitle {
+      color: var(--color-on-surface-variant);
+      font-size: 1.25rem;
+      font-weight: 300;
+      line-height: 1.75;
+      border-left: 2px solid rgba(220, 38, 38, 0.3);
+      padding-left: 1.5rem;
+      margin-bottom: 2rem;
+      max-width: 42rem;
+    }
+
+    .header-author-bar {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid rgba(96, 62, 57, 0.2);
+      flex-wrap: wrap;
+    }
+
+    .author-avatar {
+      height: 2.5rem;
+      width: 2.5rem;
+      background-color: var(--color-surface-variant);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(127, 29, 29, 0.3);
+    }
+
+    .author-avatar .material-symbols-outlined {
+      color: #dc2626;
+      font-size: 18px;
+    }
+
+    .author-info {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .author-name {
+      font-size: 12px;
+      font-family: var(--font-headline);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .author-role {
+      font-size: 10px;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-family: var(--font-headline);
+    }
+
+    .header-stats {
+      margin-left: auto;
+      display: flex;
+      gap: 1.5rem;
+    }
+
+    .stat-item {
+      text-align: center;
+    }
+
+    .stat-value {
+      display: block;
+      font-size: 1.5rem;
+      font-family: var(--font-headline);
+      font-weight: 900;
+      color: var(--color-primary);
+    }
+
+    .stat-label {
+      font-size: 8px;
+      color: #6b7280;
+      font-family: var(--font-headline);
+      letter-spacing: 0.1em;
+    }
+
+    /* ── Sections ── */
+    section, .section-block {
+      margin-bottom: 4rem;
+    }
+
+    .section-title {
+      font-family: var(--font-headline);
+      font-size: 1.5rem;
+      font-weight: 900;
+      letter-spacing: -0.025em;
+      text-transform: uppercase;
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    @media (min-width: 768px) {
+      .section-title {
+        font-size: 1.875rem;
+      }
+    }
+
+    .section-title-line {
+      height: 1px;
+      width: 2rem;
+      background-color: var(--color-primary);
+      flex-shrink: 0;
+    }
+
+    /* ── TLDR Box ── */
+    .tldr-box {
+      background-color: rgba(147, 0, 10, 0.1);
+      border: 1px solid rgba(127, 29, 29, 0.3);
+      padding: 2rem;
+      margin-bottom: 4rem;
+    }
+
+    .tldr-label {
+      font-family: var(--font-headline);
+      font-size: 0.875rem;
+      font-weight: 900;
+      letter-spacing: 0.1em;
+      color: var(--color-primary);
+      margin-bottom: 1rem;
+    }
+
+    .tldr-box p {
+      color: var(--color-on-surface-variant);
+      line-height: 1.75;
+    }
+
+    /* ── Stat Grid ── */
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    @media (min-width: 768px) {
+      .stat-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+
+    .stat-box {
+      background-color: var(--color-surface-container-low);
+      border: 1px solid rgba(96, 62, 57, 0.2);
+      padding: 1rem;
+      text-align: center;
+    }
+
+    .stat-box-value {
+      display: block;
+      font-size: 1.875rem;
+      font-family: var(--font-headline);
+      font-weight: 900;
+    }
+
+    .stat-box-label {
+      font-size: 10px;
+      font-family: var(--font-headline);
+      color: #6b7280;
+      letter-spacing: 0.1em;
+    }
+
+    .color-red { color: #ef4444; }
+    .color-orange { color: #fb923c; }
+    .color-yellow { color: #eab308; }
+    .color-gray { color: #9ca3af; }
+    .color-green { color: #22c55e; }
+
+    /* ── Table ── */
+    .domain-table-wrapper {
+      background-color: var(--color-surface-container-low);
+      padding: 1.5rem;
+      border: 1px solid rgba(96, 62, 57, 0.2);
+      overflow-x: auto;
+    }
+
+    .domain-table {
+      width: 100%;
+      font-size: 12px;
+      font-family: var(--font-headline);
+      border-collapse: collapse;
+    }
+
+    .domain-table thead tr {
+      text-align: left;
+      color: #6b7280;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      border-bottom: 1px solid rgba(96, 62, 57, 0.2);
+    }
+
+    .domain-table th {
+      padding-bottom: 0.75rem;
+      font-weight: 400;
+    }
+
+    .domain-table th:not(:first-child),
+    .domain-table td:not(:first-child) {
+      text-align: center;
+    }
+
+    .domain-table tbody tr {
+      border-bottom: 1px solid rgba(96, 62, 57, 0.1);
+    }
+
+    .domain-table td {
+      padding: 0.75rem 0;
+      color: var(--color-on-surface-variant);
+    }
+
+    .domain-table td:first-child {
+      color: var(--color-on-surface);
+      font-weight: 700;
+      letter-spacing: 0.1em;
+    }
+
+    .domain-table td:last-child {
+      color: var(--color-on-surface);
+      font-weight: 700;
+    }
+
+    /* ── Threat Cards ── */
+    .threat-card {
+      margin-bottom: 2rem;
+      border: 1px solid rgba(96, 62, 57, 0.2);
+      background-color: var(--color-surface-container-lowest);
+    }
+
+    .threat-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.5rem;
+      border-bottom: 1px solid rgba(96, 62, 57, 0.2);
+      background-color: var(--color-surface-container-low);
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .threat-card-header-left {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .threat-card-header-left .material-symbols-outlined {
+      color: var(--color-primary);
+      font-size: 1.5rem;
+    }
+
+    .threat-id {
+      font-size: 10px;
+      font-family: var(--font-headline);
+      color: #6b7280;
+      letter-spacing: 0.1em;
+    }
+
+    .threat-title {
+      font-family: var(--font-headline);
+      font-size: 1.125rem;
+      font-weight: 900;
+      letter-spacing: -0.025em;
+      text-transform: uppercase;
+      margin: 0;
+    }
+
+    .threat-card-header-right {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .cvss-value {
+      font-family: var(--font-headline);
+      font-weight: 900;
+      color: var(--color-primary);
+    }
+
+    .threat-card-body {
+      padding: 1.5rem;
+    }
+
+    .threat-card-body p {
+      color: var(--color-on-surface-variant);
+      font-size: 0.875rem;
+      line-height: 1.75;
+    }
+
+    .threat-card-body p + p {
+      margin-top: 1rem;
+    }
+
+    .inline-code {
+      color: var(--color-primary);
+      background-color: var(--color-surface-container);
+      padding: 0 0.25rem;
+      font-family: "SF Mono", "Fira Code", "Fira Mono", "Roboto Mono", "Courier New", monospace;
+      font-size: 0.85em;
+    }
+
+    /* ── Code Blocks ── */
+    .code-block {
+      margin: 1rem 0;
+    }
+
+    .code-block-header {
+      background-color: var(--color-surface-container-highest);
+      padding: 0.5rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(96, 62, 57, 0.2);
+    }
+
+    .code-block-filename {
+      font-size: 10px;
+      font-family: var(--font-headline);
+      color: #9ca3af;
+      letter-spacing: 0.1em;
+    }
+
+    .code-block-lang {
+      font-size: 10px;
+      font-family: var(--font-headline);
+      color: #4b5563;
+      letter-spacing: 0.1em;
+    }
+
+    .code-block pre {
+      background-color: #0a0a0a;
+      padding: 1rem;
+      overflow-x: auto;
+      font-size: 0.875rem;
+      line-height: 1.75;
+      margin: 0;
+    }
+
+    .code-block pre code {
+      color: var(--color-on-surface-variant);
+      font-family: "SF Mono", "Fira Code", "Fira Mono", "Roboto Mono", "Courier New", monospace;
+      white-space: pre;
+    }
+
+    /* ── Impact Box ── */
+    .impact-box {
+      margin-top: 1.5rem;
+      background-color: rgba(147, 0, 10, 0.1);
+      border-left: 4px solid #dc2626;
+      padding: 1rem;
+    }
+
+    .impact-label {
+      font-size: 10px;
+      font-family: var(--font-headline);
+      color: var(--color-primary);
+      letter-spacing: 0.1em;
+      display: block;
+      margin-bottom: 0.25rem;
+    }
+
+    .impact-box p {
+      color: var(--color-on-surface-variant);
+      font-size: 0.875rem;
+    }
+
+    /* ── Kill Chain ── */
+    .kill-chain-box {
+      background-color: var(--color-surface-container-lowest);
+      border: 1px solid rgba(127, 29, 29, 0.4);
+      padding: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .kill-chain-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .badge-cvss {
+      background-color: var(--color-error-container);
+      color: var(--color-on-error-container);
+      padding: 0.25rem 0.75rem;
+      font-size: 10px;
+      font-family: var(--font-headline);
+      font-weight: 900;
+      letter-spacing: 0.1em;
+    }
+
+    .kill-chain-steps {
+      font-family: var(--font-headline);
+      font-size: 0.875rem;
+    }
+
+    .kill-step {
+      display: flex;
+      align-items: stretch;
+      gap: 1rem;
+    }
+
+    .kill-step-indicator {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .kill-step-number {
+      width: 2rem;
+      height: 2rem;
+      background-color: var(--color-primary-container);
+      color: var(--color-on-primary-container);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 900;
+      font-family: var(--font-headline);
+      flex-shrink: 0;
+    }
+
+    .kill-step-line {
+      width: 2px;
+      flex: 1;
+      background-color: rgba(127, 29, 29, 0.3);
+      margin: 0.25rem 0;
+    }
+
+    .kill-step-content {
+      padding-bottom: 1.5rem;
+    }
+
+    .kill-step:last-child .kill-step-content {
+      padding-bottom: 0;
+    }
+
+    .kill-step-label {
+      color: var(--color-primary);
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      font-size: 12px;
+      font-family: var(--font-headline);
+    }
+
+    .kill-step-desc {
+      color: var(--color-on-surface-variant);
+      font-size: 0.875rem;
+      margin-top: 0.25rem;
+      font-family: var(--font-body);
+    }
+
+    /* ── ASAN Section ── */
+    .asan-reproduction {
+      background-color: var(--color-surface-container-low);
+      border-left: 4px solid var(--color-primary);
+      padding: 1.5rem;
+      margin-top: 1.5rem;
+    }
+
+    .asan-label {
+      font-size: 10px;
+      font-family: var(--font-headline);
+      color: var(--color-primary);
+      letter-spacing: 0.1em;
+      margin-bottom: 0.5rem;
+    }
+
+    .asan-reproduction p {
+      color: var(--color-on-surface);
+      font-size: 0.875rem;
+    }
+
+    /* ── Mini Kill Chain ── */
+    .mini-kill-chain {
+      background-color: var(--color-surface-container-low);
+      padding: 1.5rem;
+      border: 1px solid rgba(96, 62, 57, 0.2);
+      transition: border-color 0.2s;
+    }
+
+    .mini-kill-chain:hover {
+      border-color: rgba(127, 29, 29, 0.4);
+    }
+
+    .mini-kill-chain + .mini-kill-chain {
+      margin-top: 1rem;
+    }
+
+    .mini-kc-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .mini-kc-header-left {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .mini-kc-id {
+      font-size: 10px;
+      font-family: var(--font-headline);
+      color: #6b7280;
+      letter-spacing: 0.1em;
+    }
+
+    .mini-kc-title {
+      font-family: var(--font-headline);
+      font-weight: 700;
+      font-size: 0.875rem;
+      letter-spacing: -0.025em;
+      text-transform: uppercase;
+      margin: 0;
+    }
+
+    .mini-kc-header-right {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .mini-kc-vector {
+      font-size: 10px;
+      font-family: var(--font-headline);
+      color: #6b7280;
+      letter-spacing: 0.1em;
+    }
+
+    .mini-kc-cvss {
+      font-family: var(--font-headline);
+      font-weight: 900;
+      color: var(--color-primary);
+      font-size: 0.875rem;
+    }
+
+    .mini-kc-steps {
+      color: var(--color-on-surface-variant);
+      font-size: 12px;
+      line-height: 1.75;
+    }
+
+    /* ── Root Cause ── */
+    .root-cause {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      background-color: var(--color-surface-container-low);
+      padding: 1.5rem;
+      border-left: 4px solid rgba(255, 180, 168, 0.3);
+    }
+
+    .root-cause + .root-cause {
+      margin-top: 1rem;
+    }
+
+    .root-cause-id {
+      font-family: var(--font-headline);
+      font-weight: 900;
+      color: rgba(127, 29, 29, 0.4);
+      font-size: 1.5rem;
+      font-variant-numeric: tabular-nums;
+      flex-shrink: 0;
+    }
+
+    .root-cause-title {
+      font-family: var(--font-headline);
+      font-weight: 700;
+      font-size: 0.875rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--color-on-surface);
+      margin: 0 0 0.25rem 0;
+    }
+
+    .root-cause-desc {
+      color: var(--color-on-surface-variant);
+      font-size: 12px;
+      line-height: 1.75;
+    }
+
+    /* ── What's At Stake ── */
+    .stake-container {
+      background-color: var(--color-surface-container-low);
+      padding: 2rem;
+      border: 1px solid rgba(96, 62, 57, 0.2);
+    }
+
+    .stake-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+
+    @media (min-width: 768px) {
+      .stake-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    .stake-item {
+      background-color: var(--color-surface-container);
+      padding: 1rem;
+      border: 1px solid rgba(96, 62, 57, 0.2);
+    }
+
+    .stake-item-label {
+      font-family: var(--font-headline);
+      font-weight: 900;
+      color: var(--color-primary);
+      font-size: 1.125rem;
+    }
+
+    .stake-item-desc {
+      color: var(--color-on-surface-variant);
+      font-size: 12px;
+      margin-top: 0.5rem;
+      line-height: 1.75;
+    }
+
+    .stake-footer {
+      color: var(--color-on-surface-variant);
+      font-size: 0.875rem;
+      line-height: 1.75;
+      margin-top: 1.5rem;
+      border-top: 1px solid rgba(96, 62, 57, 0.2);
+      padding-top: 1.5rem;
+    }
+
+    /* ── Not All Bad ── */
+    .positive-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    .positive-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      color: var(--color-on-surface-variant);
+      font-size: 0.875rem;
+    }
+
+    .positive-list li + li {
+      margin-top: 0.75rem;
+    }
+
+    .positive-list li .material-symbols-outlined {
+      color: #22c55e;
+      font-size: 18px;
+      margin-top: 2px;
+      flex-shrink: 0;
+    }
+
+    /* ── Final Assessment ── */
+    .final-assessment {
+      background-color: rgba(147, 0, 10, 0.1);
+      border: 1px solid rgba(127, 29, 29, 0.3);
+      padding: 2rem;
+    }
+
+    .final-assessment p {
+      font-size: 0.875rem;
+      line-height: 1.75;
+    }
+
+    .final-assessment p:first-child {
+      color: var(--color-on-surface);
+      margin-bottom: 1rem;
+    }
+
+    .final-assessment p:not(:first-child) {
+      color: var(--color-on-surface-variant);
+    }
+
+    .final-assessment p + p {
+      margin-top: 1rem;
+    }
+
+    /* ── Footer ── */
+    .article-footer {
+      border-top: 1px solid rgba(96, 62, 57, 0.2);
+      padding-top: 2rem;
+    }
+
+    .tag-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .tag {
+      background-color: var(--color-surface-container-high);
+      padding: 0.25rem 0.75rem;
+      font-size: 10px;
+      font-family: var(--font-headline);
+      letter-spacing: 0.1em;
+      color: #9ca3af;
+    }
+
+    .disclosure-notice {
+      font-size: 10px;
+      font-family: var(--font-headline);
+      color: #4b5563;
+      letter-spacing: 0.1em;
+    }
+
+    /* ── Utility ── */
+    .mb-6 { margin-bottom: 1.5rem; }
+    .mb-8 { margin-bottom: 2rem; }
+    .mt-4 { margin-top: 1rem; }
+    .mt-6 { margin-top: 1.5rem; }
+
+    .text-sm { font-size: 0.875rem; }
+    .leading-relaxed { line-height: 1.75; }
+
+    .paragraph-body {
+      color: var(--color-on-surface-variant);
+      font-size: 0.875rem;
+      line-height: 1.75;
+    }
+  </style>
+</head>
+<body>
+  <article class="article-container">
+
+    <!-- ════════════════════════════════════════════════════════════════
+         HEADER
+         ════════════════════════════════════════════════════════════════ -->
+    <header style="margin-bottom: 4rem;">
+      <div class="header-meta">
+        <span class="badge-critical">CRITICAL</span>
+        <span class="meta-label">APR_02_2026</span>
+        <span class="meta-divider"></span>
+        <span class="meta-label">25_MIN_READ</span>
+      </div>
+
+      <h1>eSIM<span class="text-primary-container">_BLEED</span></h1>
+
+      <p class="header-subtitle">
+        93 vulnerabilities in lpac + OpenEUICC. A CVSS 9.8 kill chain that
+        lets a network attacker steal your SIM credentials. Every open-source
+        eSIM tool ships with TLS validation disabled.
+      </p>
+
+      <div class="header-author-bar">
+        <div class="author-info">
+          <div class="author-avatar">
+            <span class="material-symbols-outlined">sim_card</span>
+          </div>
+          <div>
+            <p class="author-name">SOURCE_BLEED_TEAM</p>
+            <p class="author-role">eSIM Security Research</p>
+          </div>
+        </div>
+        <div class="header-stats">
+          <div class="stat-item">
+            <span class="stat-value">93</span>
+            <span class="stat-label">VULNS</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value">9.8</span>
+            <span class="stat-label">MAX_CVSS</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value">6</span>
+            <span class="stat-label">KILL_CHAINS</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- ════════════════════════════════════════════════════════════════
+         TL;DR
+         ════════════════════════════════════════════════════════════════ -->
+    <section class="tldr-box">
+      <h2 class="tldr-label">// TL;DR</h2>
+      <p>
+        <strong class="text-on-surface">lpac</strong> is the most popular
+        open-source eSIM LPA client.
+        <strong class="text-on-surface">OpenEUICC</strong> is the leading
+        Android eSIM management app that uses lpac via JNI. Together, they form
+        the backbone of the open-source eSIM ecosystem. We found that
+        <strong class="text-primary">both projects ship with TLS certificate validation completely
+        disabled</strong>, meaning every SM-DP+ connection is vulnerable to trivial
+        man-in-the-middle attacks. Combined with integer overflows in the DER
+        parser and unchecked JNI pointer casts, a network attacker can steal
+        subscriber credentials (Ki, OPc, IMSI) or achieve remote code
+        execution.
+      </p>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════════
+         01 // DAMAGE_REPORT
+         ════════════════════════════════════════════════════════════════ -->
+    <section>
+      <h2 class="section-title">
+        <span class="section-title-line"></span>
+        01 // DAMAGE_REPORT
+      </h2>
+
+      <div class="stat-grid">
+        <div class="stat-box">
+          <span class="stat-box-value color-red">12</span>
+          <span class="stat-box-label">CRITICAL</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-box-value color-orange">26</span>
+          <span class="stat-box-label">HIGH</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-box-value color-yellow">33</span>
+          <span class="stat-box-label">MEDIUM</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-box-value color-gray">22</span>
+          <span class="stat-box-label">LOW</span>
+        </div>
+      </div>
+
+      <div class="domain-table-wrapper">
+        <table class="domain-table">
+          <thead>
+            <tr>
+              <th>DOMAIN</th>
+              <th>CRIT</th>
+              <th>HIGH</th>
+              <th>MED</th>
+              <th>LOW</th>
+              <th>TOTAL</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>MEMORY / PARSER</td>
+              <td class="color-red">5</td>
+              <td class="color-orange">10</td>
+              <td class="color-yellow">11</td>
+              <td class="color-gray">8</td>
+              <td>34</td>
+            </tr>
+            <tr>
+              <td>NETWORK / TLS</td>
+              <td class="color-red">3</td>
+              <td class="color-orange">5</td>
+              <td class="color-yellow">2</td>
+              <td class="color-gray">2</td>
+              <td>12</td>
+            </tr>
+            <tr>
+              <td>DRIVER / OS</td>
+              <td class="color-red">2</td>
+              <td class="color-orange">5</td>
+              <td class="color-yellow">7</td>
+              <td class="color-gray">5</td>
+              <td>19</td>
+            </tr>
+            <tr>
+              <td>JNI BRIDGE</td>
+              <td class="color-red">2</td>
+              <td class="color-orange">3</td>
+              <td class="color-yellow">5</td>
+              <td class="color-gray">-</td>
+              <td>10</td>
+            </tr>
+            <tr>
+              <td>ANDROID</td>
+              <td class="color-red">-</td>
+              <td class="color-orange">3</td>
+              <td class="color-yellow">8</td>
+              <td class="color-gray">7</td>
+              <td>18</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════════
+         02 // THE_TRIPLE_THREAT
+         ════════════════════════════════════════════════════════════════ -->
+    <section>
+      <h2 class="section-title">
+        <span class="section-title-line"></span>
+        02 // THE_TRIPLE_THREAT
+      </h2>
+      <p class="paragraph-body mb-8">
+        Three classes of vulnerability combine to form the deadliest attack
+        surface. Each is dangerous alone. Together, they create a CVSS 9.8
+        kill chain.
+      </p>
+
+      <!-- THREAT_01: TLS VALIDATION -->
+      <div class="threat-card">
+        <div class="threat-card-header">
+          <div class="threat-card-header-left">
+            <span class="material-symbols-outlined">lock_open</span>
+            <div>
+              <span class="threat-id">THREAT_01</span>
+              <h3 class="threat-title">TLS VALIDATION: OFF</h3>
+            </div>
+          </div>
+          <div class="threat-card-header-right">
+            <span class="badge-critical">CRITICAL</span>
+            <span class="cvss-value">8.1</span>
+          </div>
+        </div>
+        <div class="threat-card-body">
+          <p>
+            Both lpac HTTP backends &mdash; curl and WinHTTP &mdash; ship with
+            certificate validation
+            <strong class="text-primary">completely disabled</strong>. This
+            isn't a misconfiguration. It's hardcoded.
+          </p>
+
+          <div class="code-block">
+            <div class="code-block-header">
+              <span class="code-block-filename">driver/http/curl.c:91-92</span>
+              <span class="code-block-lang">C</span>
+            </div>
+            <pre><code>libcurl._curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+libcurl._curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);</code></pre>
+          </div>
+
+          <div class="code-block">
+            <div class="code-block-header">
+              <span class="code-block-filename">driver/http/winhttp.c:71</span>
+              <span class="code-block-lang">C</span>
+            </div>
+            <pre><code>WinHttpSetOption(hRequest, WINHTTP_OPTION_SECURITY_FLAGS,
+    &amp;(DWORD){SECURITY_FLAG_IGNORE_UNKNOWN_CA}, sizeof(DWORD));</code></pre>
+          </div>
+
+          <p class="mt-6">
+            OpenEUICC doubles down with
+            <code class="inline-code">AllowAllTrustManager</code>
+            &mdash; a TrustManager where
+            <code class="inline-code">checkServerTrusted()</code>
+            simply returns without doing anything. The Lint warning is
+            suppressed with
+            <code class="inline-code">@SuppressLint</code>.
+          </p>
+          <p class="mt-4">
+            This means
+            <strong class="text-on-surface">any certificate is accepted</strong>.
+            Self-signed, expired, wrong domain, revoked &mdash; all pass.
+            A coffee-shop Wi-Fi attacker with DNS spoofing can impersonate any
+            SM-DP+ server and intercept eSIM profile downloads containing
+            subscriber master keys.
+          </p>
+
+          <div class="impact-box">
+            <span class="impact-label">IMPACT</span>
+            <p>GSMA SGP.22 RSP security model completely invalidated. CVE-assignable as standalone finding.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- THREAT_02: DER PARSER -->
+      <div class="threat-card">
+        <div class="threat-card-header">
+          <div class="threat-card-header-left">
+            <span class="material-symbols-outlined">data_object</span>
+            <div>
+              <span class="threat-id">THREAT_02</span>
+              <h3 class="threat-title">DER PARSER: CHAINABLE OVERFLOW</h3>
+            </div>
+          </div>
+          <div class="threat-card-header-right">
+            <span class="badge-critical">CRITICAL</span>
+            <span class="cvss-value">8.1</span>
+          </div>
+        </div>
+        <div class="threat-card-body">
+          <p>
+            The custom DER/ASN.1 parser in
+            <code class="inline-code">euicc/derutil.c</code>
+            is the backbone of all eSIM protocol handling. It has three
+            chainable integer overflows that corrupt the entire parse tree.
+          </p>
+
+          <div class="code-block">
+            <div class="code-block-header">
+              <span class="code-block-filename">derutil.c:40-52 &mdash; Length field overflow</span>
+              <span class="code-block-lang">C</span>
+            </div>
+            <pre><code>if (result-&gt;length &amp; 0x80) {
+    uint8_t lengthlen = result-&gt;length &amp; 0x7F;  // max 127, no cap
+    result-&gt;length = 0;
+    for (int i = 0; i &lt; lengthlen; i++) {
+        result-&gt;length = (result-&gt;length &lt;&lt; 8) | *cptr;
+        // lengthlen &gt;= 5 &rarr; uint32_t wraps around
+        cptr++; rlen--;
+    }
+}</code></pre>
+          </div>
+
+          <div class="code-block">
+            <div class="code-block-header">
+              <span class="code-block-filename">derutil.c:61 &mdash; self.length poisoning</span>
+              <span class="code-block-lang">C</span>
+            </div>
+            <pre><code>result-&gt;self.length = result-&gt;value - result-&gt;self.ptr + result-&gt;length;
+// length=0xFFFFFFFE + 3-byte header &rarr; self.length=1 (overflow)
+// Every subsequent unpack_next() offset is now corrupted</code></pre>
+          </div>
+
+          <div class="code-block">
+            <div class="code-block-header">
+              <span class="code-block-filename">derutil.c:66-75 &mdash; Underflow to ~4GB read</span>
+              <span class="code-block-lang">C</span>
+            </div>
+            <pre><code>cptr = prev-&gt;self.ptr + prev-&gt;self.length;
+rlen = buffer_len - (cptr - buffer);
+// When self.length is corrupted: cptr &gt; buffer + buffer_len
+// rlen wraps to ~4,294,967,295 &rarr; reads far beyond buffer</code></pre>
+          </div>
+
+          <div class="impact-box">
+            <span class="impact-label">IMPACT</span>
+            <p>Chain: crafted length field &rarr; self.length poisoned &rarr; unpack_next reads arbitrary memory. Every ES10a/b/c and ES8+ parser path is affected. Reachable from network via SM-DP+ response.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- THREAT_03: JNI BRIDGE -->
+      <div class="threat-card">
+        <div class="threat-card-header">
+          <div class="threat-card-header-left">
+            <span class="material-symbols-outlined">memory</span>
+            <div>
+              <span class="threat-id">THREAT_03</span>
+              <h3 class="threat-title">JNI BRIDGE: ARBITRARY MEMORY READ</h3>
+            </div>
+          </div>
+          <div class="threat-card-header-right">
+            <span class="badge-critical">CRITICAL</span>
+            <span class="cvss-value">7.8</span>
+          </div>
+        </div>
+        <div class="threat-card-body">
+          <p>
+            OpenEUICC calls lpac through JNI. The bridge code in
+            <code class="inline-code">lpac-jni.c</code>
+            casts Java
+            <code class="inline-code">jlong</code>
+            values directly to C pointers &mdash; without any validation &mdash;
+            at 15 call sites.
+          </p>
+
+          <div class="code-block">
+            <div class="code-block-header">
+              <span class="code-block-filename">lpac-jni.c:273 &mdash; stringDeref: double dereference</span>
+              <span class="code-block-lang">C</span>
+            </div>
+            <pre><code>// Java passes any 64-bit value as jlong "handle"
+// C side blindly casts and double-dereferences:
+return toJString(env, *((char **) curr));
+// curr = attacker-controlled address &rarr; arbitrary memory read primitive</code></pre>
+          </div>
+
+          <p class="mt-6">
+            Additionally, ~30 JNI return values
+            (<code class="inline-code">GetStringUTFChars</code>,
+            <code class="inline-code">FindClass</code>,
+            <code class="inline-code">calloc</code>)
+            are never checked for NULL. The bridge is where Java's type
+            safety ends and C's pointer arithmetic begins &mdash; and
+            there are no guardrails at the crossing.
+          </p>
+
+          <div class="impact-box">
+            <span class="impact-label">IMPACT</span>
+            <p>Arbitrary memory read from Java side. Combined with zero sensitive data clearing, previous session ICCID/Ki/IMEI can be recovered from heap.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════════
+         03 // KILL_CHAIN: REMOTE PROFILE HIJACKING
+         ════════════════════════════════════════════════════════════════ -->
+    <section>
+      <h2 class="section-title">
+        <span class="section-title-line"></span>
+        03 // KILL_CHAIN: REMOTE PROFILE HIJACKING
+      </h2>
+
+      <div class="kill-chain-box">
+        <div class="kill-chain-header">
+          <span class="badge-cvss">CVSS 9.8</span>
+          <span class="meta-label">REMOTE / NO_AUTH / NO_INTERACTION</span>
+        </div>
+
+        <div class="kill-chain-steps">
+          <!-- Step 1 -->
+          <div class="kill-step">
+            <div class="kill-step-indicator">
+              <div class="kill-step-number">01</div>
+              <div class="kill-step-line"></div>
+            </div>
+            <div class="kill-step-content">
+              <span class="kill-step-label">DNS_SPOOF</span>
+              <p class="kill-step-desc">Attacker poisons DNS: SM-DP+ domain resolves to attacker IP</p>
+            </div>
+          </div>
+          <!-- Step 2 -->
+          <div class="kill-step">
+            <div class="kill-step-indicator">
+              <div class="kill-step-number">02</div>
+              <div class="kill-step-line"></div>
+            </div>
+            <div class="kill-step-content">
+              <span class="kill-step-label">TLS_BYPASS</span>
+              <p class="kill-step-desc">lpac connects with self-signed cert &mdash; VERIFYPEER=0 accepts anything</p>
+            </div>
+          </div>
+          <!-- Step 3 -->
+          <div class="kill-step">
+            <div class="kill-step-indicator">
+              <div class="kill-step-number">03</div>
+              <div class="kill-step-line"></div>
+            </div>
+            <div class="kill-step-content">
+              <span class="kill-step-label">PAYLOAD_INJECT</span>
+              <p class="kill-step-desc">Attacker returns crafted ES9+ JSON with base64-encoded malicious DER</p>
+            </div>
+          </div>
+          <!-- Step 4 -->
+          <div class="kill-step">
+            <div class="kill-step-indicator">
+              <div class="kill-step-number">04</div>
+              <div class="kill-step-line"></div>
+            </div>
+            <div class="kill-step-content">
+              <span class="kill-step-label">BASE64_OVERFLOW</span>
+              <p class="kill-step-desc">base64_decode_len() integer overflow &rarr; small buffer allocated, large write</p>
+            </div>
+          </div>
+          <!-- Step 5 -->
+          <div class="kill-step">
+            <div class="kill-step-indicator">
+              <div class="kill-step-number">05</div>
+              <div class="kill-step-line"></div>
+            </div>
+            <div class="kill-step-content">
+              <span class="kill-step-label">DER_CHAIN</span>
+              <p class="kill-step-desc">Length field manipulation &rarr; self.length poisoned &rarr; unpack_next OOB R/W</p>
+            </div>
+          </div>
+          <!-- Step 6 -->
+          <div class="kill-step">
+            <div class="kill-step-indicator">
+              <div class="kill-step-number">06</div>
+              <div class="kill-step-line"></div>
+            </div>
+            <div class="kill-step-content">
+              <span class="kill-step-label">HEAP_CORRUPT</span>
+              <p class="kill-step-desc">Heap metadata overwrite &rarr; code execution</p>
+            </div>
+          </div>
+          <!-- Step 7 -->
+          <div class="kill-step">
+            <div class="kill-step-indicator">
+              <div class="kill-step-number">07</div>
+            </div>
+            <div class="kill-step-content" style="padding-bottom: 0;">
+              <span class="kill-step-label">EXFILTRATE</span>
+              <p class="kill-step-desc">Subscriber credentials extracted: Ki, OPc, IMSI &mdash; SIM cloning achieved</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <p class="paragraph-body">
+        The absence of build hardening flags (no
+        <code class="inline-code">FORTIFY_SOURCE</code>, no
+        <code class="inline-code">stack-protector</code>, no PIE/RELRO) means there are no speed bumps between heap
+        corruption and code execution. This is a textbook chain from network
+        position to full subscriber compromise.
+      </p>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════════
+         04 // ASAN_CONFIRMED: THE ZERO-LENGTH ICCID
+         ════════════════════════════════════════════════════════════════ -->
+    <section>
+      <h2 class="section-title">
+        <span class="section-title-line"></span>
+        04 // ASAN_CONFIRMED: THE ZERO-LENGTH ICCID
+      </h2>
+      <p class="paragraph-body mb-6">
+        One finding was independently confirmed with AddressSanitizer crash reproduction.
+        A zero-length ICCID TLV (<code class="inline-code">5A 00</code>)
+        in an SM-DP+ response triggers an integer underflow in
+        <code class="inline-code">hexutil.c</code>:
+      </p>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-filename">hexutil.c:107 &mdash; bin2gsmbcd</span>
+          <span class="code-block-lang">C</span>
+        </div>
+        <pre><code>// bin_len == 0 (from zero-length ICCID TLV)
+int n = euicc_hexutil_bin2hex(output, output_len, bin, bin_len);
+// n = 0
+n -= 1;
+// n = -1, but cast to uint32_t = 0xFFFFFFFF
+gsmbcd_swap_chars(output, n);
+// Attempts to swap 4,294,967,295 bytes &rarr; ASAN: heap-buffer-overflow</code></pre>
+      </div>
+
+      <div class="asan-reproduction">
+        <p class="asan-label">REPRODUCTION STATUS</p>
+        <p>
+          ASAN crash confirmed by external researcher (Jhury Kevin Lastre).
+          Trigger requires only a single malformed TLV in SM-DP+ response. No authentication
+          needed from attacker's side when TLS validation is disabled.
+        </p>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════════
+         05 // MORE_KILL_CHAINS
+         ════════════════════════════════════════════════════════════════ -->
+    <section>
+      <h2 class="section-title">
+        <span class="section-title-line"></span>
+        05 // MORE_KILL_CHAINS
+      </h2>
+
+      <div>
+        <!-- KC-2 -->
+        <div class="mini-kill-chain">
+          <div class="mini-kc-header">
+            <div class="mini-kc-header-left">
+              <span class="mini-kc-id">KC-2</span>
+              <h3 class="mini-kc-title">MALICIOUS_eUICC &rarr; RCE</h3>
+            </div>
+            <div class="mini-kc-header-right">
+              <span class="mini-kc-vector">PHYSICAL</span>
+              <span class="mini-kc-cvss">7.5</span>
+            </div>
+          </div>
+          <p class="mini-kc-steps">Malicious SIM card &rarr; DER length=0xFFFFFFFE &rarr; self.length overflow &rarr; ICCID malloc(1) &rarr; heap overflow &rarr; no stack protector &rarr; RCE</p>
+        </div>
+
+        <!-- KC-3 -->
+        <div class="mini-kill-chain">
+          <div class="mini-kc-header">
+            <div class="mini-kc-header-left">
+              <span class="mini-kc-id">KC-3</span>
+              <h3 class="mini-kc-title">MALICIOUS_APP &rarr; PROFILE_THEFT</h3>
+            </div>
+            <div class="mini-kc-header-right">
+              <span class="mini-kc-vector">ANDROID</span>
+              <span class="mini-kc-cvss">7.5</span>
+            </div>
+          </div>
+          <p class="mini-kc-steps">Malicious app &rarr; lpa: URI intent (exported, no permission guard) &rarr; attacker SMDP injection &rarr; TLS bypass &rarr; profile theft</p>
+        </div>
+
+        <!-- KC-4 -->
+        <div class="mini-kill-chain">
+          <div class="mini-kc-header">
+            <div class="mini-kc-header-left">
+              <span class="mini-kc-id">KC-4</span>
+              <h3 class="mini-kc-title">WINHTTP_STACK_OVERFLOW &rarr; RCE</h3>
+            </div>
+            <div class="mini-kc-header-right">
+              <span class="mini-kc-vector">WINDOWS</span>
+              <span class="mini-kc-cvss">8.1</span>
+            </div>
+          </div>
+          <p class="mini-kc-steps">Malicious QR code &rarr; hostname &gt; 256 chars &rarr; sizeof/wchar mismatch &rarr; stack buffer overflow &rarr; no ASLR/canary &rarr; direct RCE</p>
+        </div>
+
+        <!-- KC-5 -->
+        <div class="mini-kill-chain">
+          <div class="mini-kc-header">
+            <div class="mini-kc-header-left">
+              <span class="mini-kc-id">KC-5</span>
+              <h3 class="mini-kc-title">LOCAL_SUPPLY_CHAIN</h3>
+            </div>
+            <div class="mini-kc-header-right">
+              <span class="mini-kc-vector">LOCAL</span>
+              <span class="mini-kc-cvss">7.8</span>
+            </div>
+          </div>
+          <p class="mini-kc-steps">ENV var injection (APDU_UQMI_PROGRAM) + SO hijacking (dlopen no verify) + Magisk TMPDIR race &rarr; arbitrary execution including root</p>
+        </div>
+
+        <!-- KC-6 -->
+        <div class="mini-kill-chain">
+          <div class="mini-kc-header">
+            <div class="mini-kc-header-left">
+              <span class="mini-kc-id">KC-6</span>
+              <h3 class="mini-kc-title">JNI_HANDLE &rarr; MEMORY_READ</h3>
+            </div>
+            <div class="mini-kc-header-right">
+              <span class="mini-kc-vector">LOCAL</span>
+              <span class="mini-kc-cvss">7.0</span>
+            </div>
+          </div>
+          <p class="mini-kc-steps">jlong handle manipulation &rarr; double pointer deref &rarr; arbitrary memory read &rarr; recover ICCID/Ki from heap (no zeroing)</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════════
+         06 // ROOT_CAUSE_ANALYSIS
+         ════════════════════════════════════════════════════════════════ -->
+    <section>
+      <h2 class="section-title">
+        <span class="section-title-line"></span>
+        06 // ROOT_CAUSE_ANALYSIS
+      </h2>
+      <p class="paragraph-body mb-8">
+        93 findings reduce to 5 systemic patterns. Fix the patterns, not just
+        the symptoms.
+      </p>
+
+      <div>
+        <div class="root-cause">
+          <span class="root-cause-id">01</span>
+          <div>
+            <h4 class="root-cause-title">ZERO-LENGTH DEFENSE ABSENT</h4>
+            <p class="root-cause-desc">bin2hex, bin2gsmbcd, base64_decode &mdash; none handle len=0. TLV length=0 is valid BER/DER.</p>
+          </div>
+        </div>
+
+        <div class="root-cause">
+          <span class="root-cause-id">02</span>
+          <div>
+            <h4 class="root-cause-title">INTEGER OVERFLOW GUARDS MISSING</h4>
+            <p class="root-cause-desc">2*bin_len, length*2+1, (len+2)/3*4+1 &mdash; every size calculation is unguarded. uint32_t overflow &rarr; small malloc &rarr; massive write.</p>
+          </div>
+        </div>
+
+        <div class="root-cause">
+          <span class="root-cause-id">03</span>
+          <div>
+            <h4 class="root-cause-title">RETURN VALUES IGNORED</h4>
+            <p class="root-cause-desc">bin2hex/bin2gsmbcd return -1 on error. Every ES8/ES9/ES10 parser ignores it and proceeds with corrupted data.</p>
+          </div>
+        </div>
+
+        <div class="root-cause">
+          <span class="root-cause-id">04</span>
+          <div>
+            <h4 class="root-cause-title">JNI RETURNS UNCHECKED</h4>
+            <p class="root-cause-desc">GetStringUTFChars, FindClass, calloc &mdash; 30+ call sites with no NULL check. The Java-to-C boundary has zero safety net.</p>
+          </div>
+        </div>
+
+        <div class="root-cause">
+          <span class="root-cause-id">05</span>
+          <div>
+            <h4 class="root-cause-title">BUILD HARDENING ABSENT</h4>
+            <p class="root-cause-desc">No FORTIFY_SOURCE, no stack-protector, no PIE/RELRO. Exploit development difficulty drops from 'hard' to 'trivial'.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════════
+         07 // WHAT_IS_AT_STAKE
+         ════════════════════════════════════════════════════════════════ -->
+    <section>
+      <h2 class="section-title">
+        <span class="section-title-line"></span>
+        07 // WHAT_IS_AT_STAKE
+      </h2>
+
+      <div class="stake-container">
+        <p class="paragraph-body mb-6">
+          An eSIM profile contains:
+        </p>
+
+        <div class="stake-grid">
+          <div class="stake-item">
+            <span class="stake-item-label">Ki</span>
+            <p class="stake-item-desc">Subscriber authentication key. With this, an attacker can clone the SIM and receive all calls/SMS.</p>
+          </div>
+          <div class="stake-item">
+            <span class="stake-item-label">OPc</span>
+            <p class="stake-item-desc">Operator variant algorithm config. Combined with Ki, enables full Milenage authentication bypass.</p>
+          </div>
+          <div class="stake-item">
+            <span class="stake-item-label">IMSI</span>
+            <p class="stake-item-desc">International mobile subscriber identity. Enables tracking, targeted interception, and identity theft.</p>
+          </div>
+        </div>
+
+        <p class="stake-footer">
+          These are the crown jewels of mobile security. SM-DP+ profile
+          download is the
+          <strong class="text-on-surface">only moment</strong> these
+          credentials traverse a network. GSMA designed SGP.22 with TLS
+          mutual authentication specifically to protect this moment. lpac
+          removes that protection entirely.
+        </p>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════════
+         08 // NOT_ALL_BAD
+         ════════════════════════════════════════════════════════════════ -->
+    <section>
+      <h2 class="section-title">
+        <span class="section-title-line"></span>
+        08 // NOT_ALL_BAD
+      </h2>
+      <p class="paragraph-body mb-6">
+        Credit where due. Both projects have genuine security strengths:
+      </p>
+
+      <ul class="positive-list">
+        <li>
+          <span class="material-symbols-outlined">check_circle</span>
+          <span>
+            <strong class="text-on-surface">GSMA CI root certificate pinning</strong> &mdash;
+            When TLS validation IS active, OpenEUICC pins to GSMA CI roots, not the system CA store
+          </span>
+        </li>
+        <li>
+          <span class="material-symbols-outlined">check_circle</span>
+          <span>
+            <strong class="text-on-surface">HTTPS enforcement</strong> &mdash;
+            HttpInterfaceImpl rejects non-https:// URLs
+          </span>
+        </li>
+        <li>
+          <span class="material-symbols-outlined">check_circle</span>
+          <span>
+            <strong class="text-on-surface">posix_spawnp over system()</strong> &mdash;
+            uqmi uses explicit argv, preventing shell injection
+          </span>
+        </li>
+        <li>
+          <span class="material-symbols-outlined">check_circle</span>
+          <span>
+            <strong class="text-on-surface">Privilege separation</strong> &mdash;
+            OpenEUICC separates privileged and unprivileged builds at compile time
+          </span>
+        </li>
+        <li>
+          <span class="material-symbols-outlined">check_circle</span>
+          <span>
+            <strong class="text-on-surface">EuiccService permission guard</strong> &mdash;
+            BIND_EUICC_SERVICE signature protection on the system service
+          </span>
+        </li>
+      </ul>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════════
+         09 // FINAL_ASSESSMENT
+         ════════════════════════════════════════════════════════════════ -->
+    <section>
+      <h2 class="section-title">
+        <span class="section-title-line"></span>
+        09 // FINAL_ASSESSMENT
+      </h2>
+
+      <div class="final-assessment">
+        <p>
+          The open-source eSIM stack has fundamental security issues that go
+          beyond individual bugs. TLS validation disabled as a default,
+          combined with a custom ASN.1 parser written without integer overflow
+          guards, and a JNI bridge with no type safety &mdash; these are
+          architectural problems that require architectural solutions.
+        </p>
+        <p>
+          The most urgent fix is trivially simple:
+          <strong class="text-primary">set CURLOPT_SSL_VERIFYPEER to 1</strong>.
+          One line of code closes the most dangerous attack vector. The DER
+          parser and JNI bridge require deeper work, but the TLS fix is a
+          one-line change that should have been made years ago.
+        </p>
+        <p>
+          If you're using lpac or OpenEUICC &mdash; or any tool built on
+          them &mdash; assume your eSIM provisioning traffic has been
+          interceptable by any network-adjacent attacker.
+        </p>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════════
+         FOOTER
+         ════════════════════════════════════════════════════════════════ -->
+    <footer class="article-footer">
+      <div class="tag-list">
+        <span class="tag">eSIM</span>
+        <span class="tag">GSMA</span>
+        <span class="tag">SGP.22</span>
+        <span class="tag">lpac</span>
+        <span class="tag">OpenEUICC</span>
+        <span class="tag">TLS</span>
+        <span class="tag">DER</span>
+        <span class="tag">JNI</span>
+        <span class="tag">SAST</span>
+      </div>
+      <p class="disclosure-notice">
+        RESPONSIBLE DISCLOSURE IN PROGRESS. FULL TECHNICAL DETAILS WILL BE
+        RELEASED AFTER VENDOR PATCHES ARE AVAILABLE.
+      </p>
+    </footer>
+
+  </article>
+</body>
+</html>

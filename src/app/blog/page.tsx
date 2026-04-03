@@ -1,14 +1,5 @@
 const articles = [
   {
-    category: "MALWARE_ANALYSIS",
-    severity: "CRITICAL",
-    severityColor: "text-red-800",
-    title: "SILENT_VOID: THE EVOLUTION OF FILELESS PAYLOADS",
-    excerpt:
-      "Analyzing the 2024 surge in PowerShell-based memory-only execution techniques used by APT-41 actors.",
-    author: "GHOST_SHELL",
-  },
-  {
     category: "PROTOCOL_FLAWS",
     severity: "HIGH_ALERT",
     severityColor: "text-yellow-600",
@@ -25,6 +16,15 @@ const articles = [
     excerpt:
       "Reviewing the mathematical shortcuts that might compromise legacy encryption sooner than projected.",
     author: "CYPHER_PUNK",
+  },
+  {
+    category: "MALWARE_ANALYSIS",
+    severity: "CRITICAL",
+    severityColor: "text-red-800",
+    title: "SILENT_VOID: THE EVOLUTION OF FILELESS PAYLOADS",
+    excerpt:
+      "Analyzing the 2024 surge in PowerShell-based memory-only execution techniques used by APT-41 actors.",
+    author: "GHOST_SHELL",
   },
 ];
 
@@ -60,47 +60,49 @@ export default function BlogPage() {
           <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
           <div className="absolute top-6 left-6">
             <span className="bg-error-container text-on-error-container px-3 py-1 font-[family-name:var(--font-headline)] text-[10px] font-black tracking-widest uppercase">
-              URGENT_INTEL
+              CVSS_9.8
             </span>
           </div>
         </div>
         <div className="lg:col-span-4 p-8 md:p-12 flex flex-col justify-center">
           <div className="mb-4 flex items-center gap-2 text-on-surface-variant font-[family-name:var(--font-headline)] text-[10px] tracking-widest uppercase">
-            <span>OCT_24_2024</span>
+            <span>APR_02_2026</span>
             <span className="w-8 h-[1px] bg-outline-variant" />
-            <span>9_MIN_READ</span>
+            <span>25_MIN_READ</span>
           </div>
           <h1 className="font-[family-name:var(--font-headline)] text-4xl md:text-5xl font-black text-primary tracking-tighter leading-none uppercase mb-6">
-            THE REAPER_V2:
+            eSIM_BLEED:
             <br />
-            BYPASSING KERNEL ISOLATION
+            93 VULNS IN THE
+            <br />
+            OPEN-SOURCE eSIM STACK
           </h1>
           <p className="text-on-surface-variant text-sm mb-8 leading-relaxed max-w-sm">
-            A comprehensive disassembly of the latest hypervisor vulnerability.
-            We explore how hardware-level flaws allow for complete guest-to-host
-            privilege escalation.
+            We audited lpac and OpenEUICC — the backbone of open-source eSIM provisioning.
+            TLS validation is completely disabled. DER parser overflows chain into RCE.
+            12 Critical, 26 High, 6 kill chains. Your SIM credentials are exposed.
           </p>
           <div className="flex items-center gap-4">
             <div className="h-10 w-10 bg-surface-variant flex items-center justify-center border border-red-900/30">
               <span className="material-symbols-outlined text-red-600">
-                terminal
+                sim_card
               </span>
             </div>
             <div>
               <p className="text-xs font-[family-name:var(--font-headline)] font-bold uppercase tracking-widest">
-                OP_X_NULL
+                SOURCE_BLEED_TEAM
               </p>
               <p className="text-[10px] text-gray-500 uppercase tracking-widest font-[family-name:var(--font-headline)]">
-                Lead Researcher
+                eSIM Security Research
               </p>
             </div>
           </div>
-          <button className="mt-10 group/btn flex items-center gap-3 text-red-500 font-[family-name:var(--font-headline)] font-bold text-xs tracking-widest uppercase">
+          <a href="/blog/esim-bleed" className="mt-10 group/btn flex items-center gap-3 text-red-500 font-[family-name:var(--font-headline)] font-bold text-xs tracking-widest uppercase">
             DECRYPT FULL REPORT
             <span className="material-symbols-outlined group-hover/btn:translate-x-2 transition-transform">
               arrow_right_alt
             </span>
-          </button>
+          </a>
         </div>
       </section>
 
