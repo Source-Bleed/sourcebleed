@@ -1,0 +1,85 @@
+{
+  "featured": {
+    "badge": "CVSS_9.8",
+    "dateRead": "APR_02_2026",
+    "readTime": "25_MIN_READ",
+    "titleLines": [
+      "eSIM_BLEED:",
+      "93 VULNS IN THE",
+      "OPEN-SOURCE eSIM STACK"
+    ],
+    "excerpt": "We audited lpac and OpenEUICC — the backbone of open-source eSIM provisioning. TLS validation is completely disabled. DER parser overflows chain into RCE. 12 Critical, 26 High, 6 kill chains. Your SIM credentials are exposed.",
+    "authorRole": "eSIM Security Research",
+    "cta": "DECRYPT FULL REPORT"
+  },
+  "articles": [
+    {
+      "category": "PROTOCOL_FLAWS",
+      "severity": "HIGH_ALERT",
+      "severityColor": "text-yellow-600",
+      "title": "UDP_REFLEX: AMPLIFICATION ATTACKS IN 5G NODES",
+      "excerpt": "A deep dive into how 5G infrastructure introduces new vectors for massive scale DDoS amplification.",
+      "author": "VOID_WALKER",
+      "readLog": "READ_LOG"
+    },
+    {
+      "category": "CRYPTO_ANALYSIS",
+      "severity": "CRITICAL",
+      "severityColor": "text-red-800",
+      "title": "QUANTUM_BREACH: RSA-2048 VULNERABILITY MAP",
+      "excerpt": "Reviewing the mathematical shortcuts that might compromise legacy encryption sooner than projected.",
+      "author": "CYPHER_PUNK",
+      "readLog": "READ_LOG"
+    },
+    {
+      "category": "MALWARE_ANALYSIS",
+      "severity": "CRITICAL",
+      "severityColor": "text-red-800",
+      "title": "SILENT_VOID: THE EVOLUTION OF FILELESS PAYLOADS",
+      "excerpt": "Analyzing the 2024 surge in PowerShell-based memory-only execution techniques used by APT-41 actors.",
+      "author": "GHOST_SHELL",
+      "readLog": "READ_LOG"
+    }
+  ],
+  "wideCard": {
+    "category": "IOT_SECURITY",
+    "status": "STABLE",
+    "title": "SMART_CITY_GRID: 400 ZERO DAYS DISCOVERED IN TRAFFIC CONTROL SYSTEMS",
+    "excerpt": "Our team spent 6 months auditing municipal infrastructure. The results show a systemic failure in perimeter defense across major Western hubs.",
+    "author": "GRID_REAPER",
+    "cta": "DECRYPT_FULL_LOG"
+  },
+  "newsletter": {
+    "title": "JOIN THE FEED",
+    "subtitle": "SECURE UPDATES DELIVERED VIA ENCRYPTED COMMS",
+    "emailLabel": "OPERATOR_EMAIL",
+    "emailPlaceholder": "USER@SOURCEBLEED.NET",
+    "submit": "INITIALIZE_LINK",
+    "activeNodes": "ACTIVE_NODES: 142",
+    "sessionId": "SESSION_ID: 0x8F92"
+  },
+  "timeline": {
+    "title": "REAPER_TIMELINE",
+    "items": [
+      {
+        "num": "01",
+        "title": "INITIAL_PENETRATION_PHASE",
+        "desc": "Case study on social engineering vectors in high-security hardware firms."
+      },
+      {
+        "num": "02",
+        "title": "LATERAL_MOVEMENT_PATTERNS",
+        "desc": "Automated analysis of movement within segmented networks using AI heuristics."
+      },
+      {
+        "num": "03",
+        "title": "EXFILTRATION_PROTOCOLS",
+        "desc": "Modern methods for bypassing DLP via steganographic covert channels."
+      }
+    ]
+  },
+  "meta": {
+    "title": "REAPER_LABS | SOURCE BLEED",
+    "description": "Security research blog: vulnerability analysis, protocol flaws, and disclosure logs."
+  }
+}

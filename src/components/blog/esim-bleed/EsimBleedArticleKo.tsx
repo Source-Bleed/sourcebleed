@@ -1,9 +1,3 @@
-export const metadata = {
-  title: "eSIM_BLEED: 오픈소스 eSIM 스택에서 발견된 93개 취약점 | SOURCE BLEED",
-  description:
-    "lpac과 OpenEUICC — 가장 널리 사용되는 오픈소스 eSIM 도구를 감사한 결과, CVSS 9.8 원격 킬 체인을 포함한 93개의 취약점을 발견했습니다. 가입자 인증 정보가 노출됩니다.",
-};
-
 const findings = {
   critical: 12,
   high: 26,
@@ -13,7 +7,7 @@ const findings = {
   killChains: 6,
 };
 
-export default function EsimBleedKoPost() {
+export function EsimBleedArticleKo() {
   return (
     <article className="max-w-4xl mx-auto px-6 md:px-12 pt-8 pb-24">
       {/* Header */}

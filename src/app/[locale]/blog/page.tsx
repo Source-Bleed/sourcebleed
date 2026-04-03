@@ -1,55 +1,41 @@
-const articles = [
-  {
-    category: "PROTOCOL_FLAWS",
-    severity: "HIGH_ALERT",
-    severityColor: "text-yellow-600",
-    title: "UDP_REFLEX: AMPLIFICATION ATTACKS IN 5G NODES",
-    excerpt:
-      "A deep dive into how 5G infrastructure introduces new vectors for massive scale DDoS amplification.",
-    author: "VOID_WALKER",
-  },
-  {
-    category: "CRYPTO_ANALYSIS",
-    severity: "CRITICAL",
-    severityColor: "text-red-800",
-    title: "QUANTUM_BREACH: RSA-2048 VULNERABILITY MAP",
-    excerpt:
-      "Reviewing the mathematical shortcuts that might compromise legacy encryption sooner than projected.",
-    author: "CYPHER_PUNK",
-  },
-  {
-    category: "MALWARE_ANALYSIS",
-    severity: "CRITICAL",
-    severityColor: "text-red-800",
-    title: "SILENT_VOID: THE EVOLUTION OF FILELESS PAYLOADS",
-    excerpt:
-      "Analyzing the 2024 surge in PowerShell-based memory-only execution techniques used by APT-41 actors.",
-    author: "GHOST_SHELL",
-  },
-];
+import Link from "next/link";
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { getBlogDictionary } from "@/i18n/get-blog-dictionary";
+import { hasLocale, type Locale } from "@/lib/i18n/config";
+import { withLocale } from "@/lib/i18n/paths";
 
-const timeline = [
-  {
-    num: "01",
-    title: "INITIAL_PENETRATION_PHASE",
-    desc: "Case study on social engineering vectors in high-security hardware firms.",
-  },
-  {
-    num: "02",
-    title: "LATERAL_MOVEMENT_PATTERNS",
-    desc: "Automated analysis of movement within segmented networks using AI heuristics.",
-  },
-  {
-    num: "03",
-    title: "EXFILTRATION_PROTOCOLS",
-    desc: "Modern methods for bypassing DLP via steganographic covert channels.",
-  },
-];
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale: localeParam } = await params;
+  if (!hasLocale(localeParam)) {
+    return {};
+  }
+  const dict = await getBlogDictionary(localeParam as Locale);
+  return {
+    title: dict.meta.title,
+    description: dict.meta.description,
+  };
+}
 
-export default function BlogPage() {
+export default async function BlogPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale: localeParam } = await params;
+  if (!hasLocale(localeParam)) {
+    notFound();
+  }
+  const locale = localeParam as Locale;
+  const dict = await getBlogDictionary(locale);
+  const esimReport = withLocale(locale, "/blog/esim-bleed");
+
   return (
     <div className="pt-8 pb-12 px-6 md:px-12 max-w-7xl">
-      {/* Featured Post */}
       <section className="mb-16 grid grid-cols-1 lg:grid-cols-12 gap-0 border border-outline-variant/20 bg-surface-container-lowest">
         <div className="lg:col-span-8 relative h-[400px] md:h-[550px] overflow-hidden group">
           <div className="w-full h-full bg-surface-container flex items-center justify-center">
@@ -60,27 +46,26 @@ export default function BlogPage() {
           <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
           <div className="absolute top-6 left-6">
             <span className="bg-error-container text-on-error-container px-3 py-1 font-[family-name:var(--font-headline)] text-[10px] font-black tracking-widest uppercase">
-              CVSS_9.8
+              {dict.featured.badge}
             </span>
           </div>
         </div>
         <div className="lg:col-span-4 p-8 md:p-12 flex flex-col justify-center">
           <div className="mb-4 flex items-center gap-2 text-on-surface-variant font-[family-name:var(--font-headline)] text-[10px] tracking-widest uppercase">
-            <span>APR_02_2026</span>
+            <span>{dict.featured.dateRead}</span>
             <span className="w-8 h-[1px] bg-outline-variant" />
-            <span>25_MIN_READ</span>
+            <span>{dict.featured.readTime}</span>
           </div>
           <h1 className="font-[family-name:var(--font-headline)] text-4xl md:text-5xl font-black text-primary tracking-tighter leading-none uppercase mb-6">
-            eSIM_BLEED:
-            <br />
-            93 VULNS IN THE
-            <br />
-            OPEN-SOURCE eSIM STACK
+            {dict.featured.titleLines.map((line, i) => (
+              <span key={`${i}-${line}`}>
+                {i > 0 ? <br /> : null}
+                {line}
+              </span>
+            ))}
           </h1>
           <p className="text-on-surface-variant text-sm mb-8 leading-relaxed max-w-sm">
-            We audited lpac and OpenEUICC — the backbone of open-source eSIM provisioning.
-            TLS validation is completely disabled. DER parser overflows chain into RCE.
-            12 Critical, 26 High, 6 kill chains. Your SIM credentials are exposed.
+            {dict.featured.excerpt}
           </p>
           <div className="flex items-center gap-4">
             <div className="h-10 w-10 bg-surface-variant flex items-center justify-center border border-red-900/30">
@@ -93,22 +78,24 @@ export default function BlogPage() {
                 SOURCE_BLEED_TEAM
               </p>
               <p className="text-[10px] text-gray-500 uppercase tracking-widest font-[family-name:var(--font-headline)]">
-                eSIM Security Research
+                {dict.featured.authorRole}
               </p>
             </div>
           </div>
-          <a href="/blog/esim-bleed" className="mt-10 group/btn flex items-center gap-3 text-red-500 font-[family-name:var(--font-headline)] font-bold text-xs tracking-widest uppercase">
-            DECRYPT FULL REPORT
+          <Link
+            href={esimReport}
+            className="mt-10 group/btn flex items-center gap-3 text-red-500 font-[family-name:var(--font-headline)] font-bold text-xs tracking-widest uppercase"
+          >
+            {dict.featured.cta}
             <span className="material-symbols-outlined group-hover/btn:translate-x-2 transition-transform">
               arrow_right_alt
             </span>
-          </a>
+          </Link>
         </div>
       </section>
 
-      {/* Article Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {articles.map((article) => (
+        {dict.articles.map((article) => (
           <article
             key={article.title}
             className="bg-surface-container-low p-6 border-b-2 border-transparent hover:border-red-600 transition-all group"
@@ -138,14 +125,16 @@ export default function BlogPage() {
               <span className="text-[10px] font-[family-name:var(--font-headline)] text-gray-600 uppercase">
                 BY: {article.author}
               </span>
-              <button className="bg-surface-container-high px-3 py-2 text-[10px] font-[family-name:var(--font-headline)] font-bold uppercase tracking-widest hover:shadow-[0_0_15px_rgba(255,0,0,0.3)] hover:text-primary transition-all">
-                READ_LOG
+              <button
+                type="button"
+                className="bg-surface-container-high px-3 py-2 text-[10px] font-[family-name:var(--font-headline)] font-bold uppercase tracking-widest hover:shadow-[0_0_15px_rgba(255,0,0,0.3)] hover:text-primary transition-all"
+              >
+                {article.readLog}
               </button>
             </div>
           </article>
         ))}
 
-        {/* Wide Article Card */}
         <article className="bg-surface-container-low p-6 border-b-2 border-transparent hover:border-red-600 transition-all group lg:col-span-2">
           <div className="flex flex-col md:flex-row gap-8">
             <div className="h-64 md:h-auto md:w-1/2 bg-surface-container overflow-hidden flex items-center justify-center">
@@ -156,55 +145,61 @@ export default function BlogPage() {
             <div className="md:w-1/2 flex flex-col justify-center">
               <div className="flex justify-between items-start mb-4">
                 <span className="text-[10px] font-[family-name:var(--font-headline)] text-on-surface-variant tracking-widest uppercase">
-                  IOT_SECURITY
+                  {dict.wideCard.category}
                 </span>
                 <span className="text-[10px] font-[family-name:var(--font-headline)] text-gray-400 tracking-widest uppercase">
-                  STABLE
+                  {dict.wideCard.status}
                 </span>
               </div>
               <h3 className="font-[family-name:var(--font-headline)] text-2xl font-bold text-on-surface mb-4 uppercase leading-tight group-hover:text-primary transition-colors">
-                SMART_CITY_GRID: 400 ZERO DAYS DISCOVERED IN TRAFFIC CONTROL
-                SYSTEMS
+                {dict.wideCard.title}
               </h3>
               <p className="text-on-surface-variant text-xs mb-8 leading-relaxed">
-                Our team spent 6 months auditing municipal infrastructure. The
-                results show a systemic failure in perimeter defense across major
-                Western hubs.
+                {dict.wideCard.excerpt}
               </p>
               <div className="flex justify-between items-center mt-auto">
                 <span className="text-[10px] font-[family-name:var(--font-headline)] text-gray-600 uppercase">
-                  BY: GRID_REAPER
+                  BY: {dict.wideCard.author}
                 </span>
-                <button className="bg-surface-container-high px-5 py-3 text-[10px] font-[family-name:var(--font-headline)] font-bold uppercase tracking-widest hover:shadow-[0_0_15px_rgba(255,0,0,0.3)] hover:text-primary transition-all">
-                  DECRYPT_FULL_LOG
+                <button
+                  type="button"
+                  className="bg-surface-container-high px-5 py-3 text-[10px] font-[family-name:var(--font-headline)] font-bold uppercase tracking-widest hover:shadow-[0_0_15px_rgba(255,0,0,0.3)] hover:text-primary transition-all"
+                >
+                  {dict.wideCard.cta}
                 </button>
               </div>
             </div>
           </div>
         </article>
 
-        {/* Newsletter Signup */}
         <section className="bg-surface-container-highest p-8 flex flex-col justify-between border-l-4 border-red-600">
           <div>
             <h2 className="font-[family-name:var(--font-headline)] text-2xl font-black text-on-surface uppercase tracking-tight mb-2">
-              JOIN THE FEED
+              {dict.newsletter.title}
             </h2>
             <p className="text-[10px] font-[family-name:var(--font-headline)] tracking-widest text-on-surface-variant uppercase mb-8">
-              SECURE UPDATES DELIVERED VIA ENCRYPTED COMMS
+              {dict.newsletter.subtitle}
             </p>
             <div className="space-y-6">
               <div>
-                <label className="block text-[10px] font-[family-name:var(--font-headline)] text-gray-500 uppercase tracking-widest mb-1">
-                  OPERATOR_EMAIL
+                <label
+                  htmlFor="blog-newsletter-email"
+                  className="block text-[10px] font-[family-name:var(--font-headline)] text-gray-500 uppercase tracking-widest mb-1"
+                >
+                  {dict.newsletter.emailLabel}
                 </label>
                 <input
+                  id="blog-newsletter-email"
                   type="email"
-                  placeholder="USER@SOURCEBLEED.NET"
+                  placeholder={dict.newsletter.emailPlaceholder}
                   className="w-full bg-surface-container-low border-0 border-b-2 border-outline-variant focus:border-primary transition-all px-0 py-2 text-sm font-[family-name:var(--font-headline)] tracking-widest placeholder:text-gray-700 outline-none focus:ring-0"
                 />
               </div>
-              <button className="w-full py-4 bg-primary text-on-primary font-[family-name:var(--font-headline)] font-black text-xs tracking-[0.3em] uppercase hover:bg-white hover:text-black transition-all">
-                INITIALIZE_LINK
+              <button
+                type="button"
+                className="w-full py-4 bg-primary text-on-primary font-[family-name:var(--font-headline)] font-black text-xs tracking-[0.3em] uppercase hover:bg-white hover:text-black transition-all"
+              >
+                {dict.newsletter.submit}
               </button>
             </div>
           </div>
@@ -213,21 +208,20 @@ export default function BlogPage() {
               security
             </span>
             <p className="text-[8px] font-[family-name:var(--font-headline)] text-gray-600 text-right uppercase leading-tight">
-              ACTIVE_NODES: 142
+              {dict.newsletter.activeNodes}
               <br />
-              SESSION_ID: 0x8F92
+              {dict.newsletter.sessionId}
             </p>
           </div>
         </section>
       </div>
 
-      {/* Research Timeline */}
       <section className="mt-24 border-t border-outline-variant/20 pt-16">
         <h2 className="font-[family-name:var(--font-headline)] text-3xl font-black text-on-surface uppercase tracking-tighter mb-12">
-          REAPER_TIMELINE
+          {dict.timeline.title}
         </h2>
         <div className="space-y-0">
-          {timeline.map((item) => (
+          {dict.timeline.items.map((item) => (
             <div
               key={item.num}
               className="group flex items-center gap-8 py-8 border-b border-outline-variant/10 hover:bg-red-950/5 transition-all px-4"

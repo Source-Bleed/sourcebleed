@@ -1,0 +1,85 @@
+{
+  "featured": {
+    "badge": "CVSS_9.8",
+    "dateRead": "APR_02_2026",
+    "readTime": "25분 읽기",
+    "titleLines": [
+      "eSIM_BLEED:",
+      "오픈소스 eSIM 스택",
+      "93개 취약점"
+    ],
+    "excerpt": "lpac과 OpenEUICC — 오픈소스 eSIM 프로비저닝의 기반을 감사했다. TLS 검증이 완전히 비활성화되어 있고, DER 파서 오버플로가 RCE로 이어진다. 치명적 12건, 높음 26건, 킬 체인 6개. SIM 자격 증명이 노출된다.",
+    "authorRole": "eSIM 보안 리서치",
+    "cta": "전체 리포트 보기"
+  },
+  "articles": [
+    {
+      "category": "프로토콜 결함",
+      "severity": "높은 경보",
+      "severityColor": "text-yellow-600",
+      "title": "UDP_REFLEX: 5G 노드의 증폭 공격",
+      "excerpt": "5G 인프라가 대규모 DDoS 증폭을 위한 새로운 벡터를 어떻게 도입하는지 심층 분석.",
+      "author": "VOID_WALKER",
+      "readLog": "로그 읽기"
+    },
+    {
+      "category": "암호 분석",
+      "severity": "치명적",
+      "severityColor": "text-red-800",
+      "title": "QUANTUM_BREACH: RSA-2048 취약점 맵",
+      "excerpt": "레거시 암호가 예상보다 빨리 손상될 수 있는 수학적 지름길 검토.",
+      "author": "CYPHER_PUNK",
+      "readLog": "로그 읽기"
+    },
+    {
+      "category": "악성코드 분석",
+      "severity": "치명적",
+      "severityColor": "text-red-800",
+      "title": "SILENT_VOID: 파일리스 페이로드의 진화",
+      "excerpt": "APT-41이 사용한 PowerShell 기반 메모리 전용 실행 기법의 2024년 급증 분석.",
+      "author": "GHOST_SHELL",
+      "readLog": "로그 읽기"
+    }
+  ],
+  "wideCard": {
+    "category": "IoT 보안",
+    "status": "안정",
+    "title": "SMART_CITY_GRID: 교통 제어 시스템에서 발견된 400개 제로데이",
+    "excerpt": "6개월간 도시 인프라를 감사한 결과, 주요 서구 거점에서 경계 방어의 체계적 실패가 드러났다.",
+    "author": "GRID_REAPER",
+    "cta": "전체 로그 보기"
+  },
+  "newsletter": {
+    "title": "피드 구독",
+    "subtitle": "암호화 통신으로 전달되는 보안 업데이트",
+    "emailLabel": "운영자 이메일",
+    "emailPlaceholder": "USER@SOURCEBLEED.NET",
+    "submit": "연결 시작",
+    "activeNodes": "활성 노드: 142",
+    "sessionId": "세션 ID: 0x8F92"
+  },
+  "timeline": {
+    "title": "REAPER 타임라인",
+    "items": [
+      {
+        "num": "01",
+        "title": "초기 침투 단계",
+        "desc": "고보안 하드웨어 기업의 소셜 엔지니어링 벡터 사례 연구."
+      },
+      {
+        "num": "02",
+        "title": "측면 이동 패턴",
+        "desc": "AI 휴리스틱을 사용한 분할 네트워크 내 이동 자동 분석."
+      },
+      {
+        "num": "03",
+        "title": "유출 프로토콜",
+        "desc": "은닉 채널 스테가노그래피를 통한 DLP 우회의 현대적 방법."
+      }
+    ]
+  },
+  "meta": {
+    "title": "REAPER_LABS | SOURCE BLEED",
+    "description": "보안 리서치 블로그: 취약점 분석, 프로토콜 결함, 공개 로그."
+  }
+}

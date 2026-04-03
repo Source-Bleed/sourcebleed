@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { pathnameWithoutLocale } from "@/lib/i18n/paths";
 
 const sidebarItems = [
   { icon: "terminal", label: "TERMINAL" },
@@ -12,9 +13,14 @@ const sidebarItems = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const path = pathnameWithoutLocale(pathname);
 
   const activeIndex =
-    pathname === "/blog" ? 2 : pathname === "/cve" ? 0 : -1;
+    path === "/blog" || path.startsWith("/blog/")
+      ? 2
+      : path === "/cve" || path.startsWith("/cve/")
+        ? 0
+        : -1;
 
   return (
     <aside className="hidden lg:flex fixed left-0 top-16 h-[calc(100vh-64px)] w-64 flex-col bg-surface border-r border-red-900/30 z-40">
@@ -47,7 +53,10 @@ export function Sidebar() {
         </div>
       </div>
       <div className="p-6">
-        <button className="w-full py-3 border border-red-900/50 text-red-500 font-[family-name:var(--font-label)] text-[10px] tracking-widest uppercase hover:bg-red-900/30 transition-all bg-red-950/20">
+        <button
+          type="button"
+          className="w-full py-3 border border-red-900/50 text-red-500 font-[family-name:var(--font-label)] text-[10px] tracking-widest uppercase hover:bg-red-900/30 transition-all bg-red-950/20"
+        >
           ENCRYPT_SESSION
         </button>
       </div>

@@ -1,9 +1,3 @@
-export const metadata = {
-  title: "eSIM_BLEED: 93 VULNS IN THE OPEN-SOURCE eSIM STACK | SOURCE BLEED",
-  description:
-    "We audited lpac and OpenEUICC — the most widely used open-source eSIM tools — and found 93 vulnerabilities, including a CVSS 9.8 remote kill chain that exposes subscriber credentials.",
-};
-
 const findings = {
   critical: 12,
   high: 26,
@@ -13,7 +7,7 @@ const findings = {
   killChains: 6,
 };
 
-export default function EsimBleedPost() {
+export function EsimBleedArticleEn() {
   return (
     <article className="max-w-4xl mx-auto px-6 md:px-12 pt-8 pb-24">
       {/* Header */}
